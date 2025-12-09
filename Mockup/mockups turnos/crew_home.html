@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Crew - McDonald's</title>
+    <style>
+        /* (Pega los estilos CSS necesarios de la primera respuesta aquí para el diseño del crew) */
+        body { font-family: sans-serif; background-color: #fce81a; margin: 0; padding: 20px; }
+        .container { display: flex; max-width: 1200px; margin: 0 auto; background-color: #fce81a; border-radius: 10px; padding: 20px; }
+        .sidebar { background-color: #fce81a; width: 250px; padding: 20px; border-radius: 5px; margin-right: 20px; }
+        .main-content { flex-grow: 1; background-color: #fce81a; padding: 20px; border-radius: 5px; }
+        .card { background-color: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .button, .input-field { background-color: #ff5757; color: white; border: none; padding: 10px 15px; border-radius: 5px; text-align: center; margin: 10px 0; cursor: pointer; width: 100%; box-sizing: border-box; }
+        .input-field { background-color: white; color: black; border: 1px solid #ccc; padding: 10px; text-align: left; }
+        .logo { font-size: 36px; text-align: center; margin-bottom: 20px; color: #cc0000; font-weight: bold; }
+        .role { background-color: #ff5757; color: white; padding: 5px 10px; border-radius: 5px; float: right; }
+        .sub-section { background-color: #ffe557; padding: 20px; border-radius: 8px; margin-top: 20px; }
+        .sub-section h4 { color: black; margin-top: 0; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="sidebar">
+            <div class="logo">M</div>
+            <div class="button">Login</div>
+            <p>Usuario</p>
+            <input type="text" value="crew" disabled class="input-field" style="background-color: #eee;">
+            <p>Contraseña</p>
+            <input type="password" value="********" disabled class="input-field" style="background-color: #eee;">
+             <button class="button yellow-button" onclick="window.location.href='login.html'">Cerrar Sesión</button>
+        </div>
+
+        <div class="main-content">
+            <div class="card" id="crew-change-request">
+                <span class="role">Rol: Crew</span>
+                <div class="logo" style="float: left; margin-right: 10px;">M</div>
+                <div class="button" style="width: auto; margin-right: 0;">Home</div>
+                <div style="clear: both;"></div>
+                
+                <div style="display: flex; gap: 20px; margin-top: 20px;">
+                    <div class="crew-options" style="flex: 1;">
+                        <button class="button">Visualizar planilla horaria mensual</button>
+                        <button class="button">Solicitar cambio de turno</button>
+                        <button class="button">Historial de turnos</button>
+                    </div>
+
+                    <div class="sub-section" style="flex: 1;">
+                        <h4>Solicitar cambio de turno</h4>
+                        <p>Seleccione turno a cambiar</p>
+                        <input type="text" value="28 - 10 - 2025  15:00 - 20:00" class="input-field" style="background-color: white;">
+                        
+                        <p>Ingrese cambio sugerido</p>
+                        <input type="text" value="28 - 10 - 2025  8:00 - 13:00" class="input-field" style="background-color: white;">
+                        
+                        <p>Ingrese motivo del cambio</p>
+                        <textarea class="input-field" rows="3" style="resize: none;"></textarea>
+                        
+                        <button class="button">Enviar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
