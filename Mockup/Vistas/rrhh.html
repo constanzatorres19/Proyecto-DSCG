@@ -3,66 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home Crew - McDonald's</title>
-    <style>
-        /* (Pega los estilos CSS necesarios de la primera respuesta aquí para el diseño del crew) */
-        body { font-family: sans-serif; background-color: #fce81a; margin: 0; padding: 20px; }
-        .container { display: flex; max-width: 1200px; margin: 0 auto; background-color: #fce81a; border-radius: 10px; padding: 20px; }
-        .sidebar { background-color: #fce81a; width: 250px; padding: 20px; border-radius: 5px; margin-right: 20px; }
-        .main-content { flex-grow: 1; background-color: #fce81a; padding: 20px; border-radius: 5px; }
-        .card { background-color: white; border-radius: 8px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .button, .input-field { background-color: #ff5757; color: white; border: none; padding: 10px 15px; border-radius: 5px; text-align: center; margin: 10px 0; cursor: pointer; width: 100%; box-sizing: border-box; }
-        .input-field { background-color: white; color: black; border: 1px solid #ccc; padding: 10px; text-align: left; }
-        .logo { font-size: 36px; text-align: center; margin-bottom: 20px; color: #cc0000; font-weight: bold; }
-        .role { background-color: #ff5757; color: white; padding: 5px 10px; border-radius: 5px; float: right; }
-        .sub-section { background-color: #ffe557; padding: 20px; border-radius: 8px; margin-top: 20px; }
-        .sub-section h4 { color: black; margin-top: 0; }
-    </style>
+    <title>Panel RR.HH.</title>
+    <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
+    <header>
+        <h2>Panel RR.HH. 🧍‍♀️</h2>
+        <nav>
+            <a href="rrhh.html?view=planning">Planificación de Turnos (RF03)</a>
+            <a href="rrhh.html?view=requests">Solicitudes de Cambio (RF06)</a>
+            <a href="rrhh.html?view=reports">Reportes (RF10, RF31)</a>
+        </nav>
+    </header>
 
-    <div class="container">
-        <div class="sidebar">
-            <div class="logo">M</div>
-            <div class="button">Login</div>
-            <p>Usuario</p>
-            <input type="text" value="crew" disabled class="input-field" style="background-color: #eee;">
-            <p>Contraseña</p>
-            <input type="password" value="********" disabled class="input-field" style="background-color: #eee;">
-             <button class="button yellow-button" onclick="window.location.href='login.html'">Cerrar Sesión</button>
-        </div>
+    <main id="rrhh-main">
+        </main>
 
-        <div class="main-content">
-            <div class="card" id="crew-change-request">
-                <span class="role">Rol: Crew</span>
-                <div class="logo" style="float: left; margin-right: 10px;">M</div>
-                <div class="button" style="width: auto; margin-right: 0;">Home</div>
-                <div style="clear: both;"></div>
-                
-                <div style="display: flex; gap: 20px; margin-top: 20px;">
-                    <div class="crew-options" style="flex: 1;">
-                        <button class="button">Visualizar planilla horaria mensual</button>
-                        <button class="button">Solicitar cambio de turno</button>
-                        <button class="button">Historial de turnos</button>
-                    </div>
+    <script src="../js/app.js"></script>
+    <script>
+        // Lógica simple para simular la navegación entre secciones
+        const mainContent = document.getElementById('rrhh-main');
+        const view = new URLSearchParams(window.location.search).get('view') || 'planning';
 
-                    <div class="sub-section" style="flex: 1;">
-                        <h4>Solicitar cambio de turno</h4>
-                        <p>Seleccione turno a cambiar</p>
-                        <input type="text" value="28 - 10 - 2025  15:00 - 20:00" class="input-field" style="background-color: white;">
-                        
-                        <p>Ingrese cambio sugerido</p>
-                        <input type="text" value="28 - 10 - 2025  8:00 - 13:00" class="input-field" style="background-color: white;">
-                        
-                        <p>Ingrese motivo del cambio</p>
-                        <textarea class="input-field" rows="3" style="resize: none;"></textarea>
-                        
-                        <button class="button">Enviar</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
+        if (view === 'planning') {
+            mainContent.innerHTML = '<h3>Planificación de Malla Horaria (RF03, RF33)</h3>' +
+                '<p>Utilice esta interfaz para crear y publicar turnos. ' +
+                '<button class="btn-primary" onclick="alert(\'Turnos publicados con éxito (RF04)! Notificaciones enviadas (RF25).\')">Publicar Turnos (RF04)</button>' +
+                '<button class="btn-secondary">Guardar como Historial (RF29)</button></p>' +
+                // RF33: Simulación de la Malla Horaria
+                '<h4>Malla Semanal [Imagen de la Malla Horaria de Turnos]</h4>' +
+                '<table>' +
+                    '<thead><tr><th>Empleado</th><th>Lunes</th><th>Martes</th><th>...</th></tr></thead>' +
+                    '<tbody><tr><td>Juan Pérez (Crew)</td><td>Mañana (8-14h)</td><td>Libre (RF05)</td><td>...</td></tr>' +
+                    '<tr><td>María López (Entrenador)</td><td>Tarde (14-22h)</td><td>Tarde (14-22h)</td><td>...</td></tr></tbody>' +
+                '</table>';
+        } else if (view === 'requests') {
+            // RF06, RF07: Simulación de Solicitudes de Cambio de Turno
+            mainContent.innerHTML = '<h3>Solicitudes de Cambio de Turno Pendientes (RF06)</h3>' +
+                '<table id="requests-table">' +
+                    '<thead><tr><th>Solicitante</th><th>Turno Original</th><th>Turno Solicitado</th><th>Estado</th><th>Acciones</th></tr></thead>' +
+                    '<tbody id="requests-body"></tbody>' +
+                '</table>';
+            
+            // Usar JS para "cargar" datos de simulación
+            document.addEventListener('DOMContentLoaded', () => {
+                loadRequestsMock();
+            });
+        }
+        // ... agregar más lógica para 'reports'
+    </script>
 </body>
 </html>
