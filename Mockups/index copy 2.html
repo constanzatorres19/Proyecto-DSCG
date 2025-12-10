@@ -84,10 +84,17 @@
 
     /* Sidebar / menú */
     .sidebar{background:var(--mc-light);border-radius:12px;padding:12px;border:2px solid rgba(0,0,0,0.08)}
-    .side-block{display:flex;flex-direction:column;gap:10px}
+    .side-block{display:flex;flex-direction:column;gap:15px} /* Aumentado a 15px para más separación entre bloques */
     
-    /* Eliminar espacio entre HOME y botones de rol */
-    .side-block > .menu-btn { margin-bottom: 10px; }
+    /* Para separar los botones dentro de cada bloque de rol */
+    #menuAdmin, #menuRRHH, #menuGerente, #menuEntrenador, #menuCrew {
+      display: flex;
+      flex-direction: column;
+      gap: 8px; /* Separación entre botones de rol */
+    }
+    
+    /* Eliminar/Ajustar espacio entre HOME y botones de rol (usar gap de side-block) */
+    .side-block > .menu-btn { margin-bottom: 0; }
     
     button.menu-btn, .btn-primary{background:var(--mc-red);color:white;border:none;padding:10px;border-radius:10px;font-weight:600;cursor:pointer}
     .btn-sec{background:var(--mc-yellow);color:var(--mc-dark);border:none;}
@@ -185,13 +192,14 @@
             </div>
             
             <div id="menuRRHH" style="display:none">
-              <button class="btn btn-sec" onclick="nav('planificarRRHH')">Crear Malla Horaria</button>
-              <button class="btn btn-sec" onclick="nav('revisarSolicitudesTurno')">Solicitudes de Cambio de Turno</button>
+              <button class="btn btn-sec" onclick="nav('visualizarMalla')">Malla Horaria Publicada</button>
+              <button class="btn btn-sec" onclick="nav('kpisRRHH')">Panel de KPIs</button>
             </div>
             
             <div id="menuGerente" style="display:none">
-              <button class="btn btn-sec" onclick="nav('visualizarMalla')">Visualizar Malla Horaria</button>
-              <button class="btn btn-sec" onclick="nav('planificarPosiciones')">Planificar Posiciones</button>
+              <button class="btn btn-sec" onclick="nav('planificarRRHH')">Crear/Editar Malla Horaria</button>
+              <button class="btn btn-sec" onclick="nav('planificarPosiciones')">Asignar Posiciones Operativas</button>
+              <button class="btn btn-sec" onclick="nav('revisarSolicitudesTurno')">Solicitudes de Cambio de Turno</button>
               <button class="btn btn-sec" onclick="nav('revisarSolicitudesPosicion')">Solicitudes de Posición (Entr.)</button>
             </div>
             
@@ -299,10 +307,14 @@
                 <tbody></tbody>
             </table>
           </section>
-
+          
+          <section id="kpisRRHH" class="screen">
+            <h2>Panel de Indicadores Clave (RR.HH.)</h2>
+            <p class="muted">Aquí se mostrarán los principales KPIs de planificación y dotación (Pendiente de implementación).</p>
+            </section>
           <section id="planificarRRHH" class="screen">
-            <h2>Creación de Malla Horaria Semanal (RR.HH.)</h2>
-            <p class="muted">Planifique los turnos por empleado. El Gerente añadirá las posiciones después.</p>
+            <h2>Creación de Malla Horaria Semanal (Gerente)</h2>
+            <p class="muted">Planifique los turnos por empleado. Usted (Gerente) puede añadir las posiciones después.</p>
 
             <form onsubmit="event.preventDefault(); toggleForm('formAgregarTurnoRRHH')">
                 <div class="row">
@@ -352,7 +364,7 @@
           </section>
 
           <section id="revisarSolicitudesTurno" class="screen">
-            <h2>Solicitudes de Cambio de Turno Pendientes (RR.HH.)</h2>
+            <h2>Solicitudes de Cambio de Turno Pendientes (Gerente)</h2>
             <p class="muted">Revisa y aprueba/rechaza los cambios solicitados por el Crew.</p>
             <table id="tableSolicitudesTurno">
               <thead><tr><th>Empleado</th><th>Turno original</th><th>Turno pedido</th><th>Motivo</th><th>Estado</th><th>Acciones</th></tr></thead>
@@ -362,8 +374,8 @@
           </section>
 
           <section id="visualizarMalla" class="screen">
-            <h2>Visualizar Malla Horaria (Turnos + Posiciones)</h2>
-            <p class="muted">Vista de la malla completa (turnos creados por RR.HH. y posiciones añadidas por el Gerente).</p>
+            <h2>Visualizar Malla Horaria (Turnos + Posiciones) (RR.HH. y Gerente)</h2>
+            <p class="muted">Vista de la malla completa (turnos creados por Gerente y posiciones añadidas por el Gerente).</p>
             <input type="text" id="filtroMallaVisualizacion" placeholder="Buscar por Empleado, Posición o Fecha..." style="width: 100%; margin-bottom: 10px;" onkeyup="renderMallaPublicada()">
             <table id="tableMallaVisualizacion">
                 <thead><tr><th>Empleado</th><th>Fecha</th><th>Inicio</th><th>Fin</th><th>Cargo</th><th>Posición</th></tr></thead>
@@ -485,7 +497,7 @@
 
           <section id="estadoSolicitudes" class="screen">
             <h2>Estado de Mis Solicitudes de Cambio</h2>
-            <p class="muted">Aquí puedes ver el estado de tus solicitudes de cambio de turno (RR.HH.) y posición (Entrenador).</p>
+            <p class="muted">Aquí puedes ver el estado de tus solicitudes de cambio de turno (Gerente) y posición (Entrenador).</p>
             <table id="tableEstadoSolicitudes"><thead><tr><th>Tipo</th><th>Turno Original</th><th>Turno Pedido/Posición Pedida</th><th>Estado</th></tr></thead><tbody>
                 </tbody></table>
           </section>
@@ -538,6 +550,28 @@
         el.style.display = el.style.display === 'none' ? 'block' : 'none';
     }
 
+    /* ---------- FUNCIONES HOME/DASHBOARD ---------- */
+    function updateHomeDashboard() {
+        if (!currentUser) return; // Should not happen if logged in
+        
+        // 1. Planilla Info (same for Gerente and Entrenador)
+        document.getElementById('homePlanillaInfo').innerText = planillaPublicada.length + ' turnos publicados';
+        
+        // 2. Solicitudes Pendientes
+        let pendingCount = 0;
+        
+        if (currentUser.role === 'gerente') {
+            // Gerente revisa Solicitudes de Turno ('Turno') y Solicitudes de Posición (Entr.) ('PosicionEntrenador')
+            pendingCount = solicitudes.filter(s => s.estado === 'Pendiente' && (s.tipo === 'Turno' || s.tipo === 'PosicionEntrenador')).length;
+        } else if (currentUser.role === 'entrenador') {
+            // Entrenador revisa Solicitudes de Posición (Crew) ('PosicionCrew')
+            pendingCount = solicitudes.filter(s => s.estado === 'Pendiente' && s.tipo === 'PosicionCrew').length;
+        }
+        
+        document.getElementById('homeSolicitudesInfo').innerText = pendingCount;
+    }
+
+
     // Navegación simple entre "pantallas" (secciones) del mockup
     function nav(screenId){
       document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
@@ -560,6 +594,8 @@
       document.querySelector('.app').classList.toggle('logged-in', !!currentUser);
       
       // Acciones por pantalla que requieren renderizado
+      // NOTA: 'home' ahora solo es para Gerente y Entrenador
+      if(screenId==='home') updateHomeDashboard();
       if(screenId==='gestionUsuarios') renderTablaUsuarios();
       if(screenId==='planificarRRHH') renderMallaRRHH(); // Función modificada
       if(screenId==='miPlanilla') {
@@ -593,7 +629,14 @@
       
       currentUser = foundUser;
       document.getElementById('userName').innerText = foundUser.name + ' (' + ROLES[foundUser.role] + ')';
-      nav('home');
+      
+      // Redirección inicial según el rol (Requisito del usuario)
+      let initialScreen = 'home';
+      if (foundUser.role === 'admin') initialScreen = 'gestionUsuarios';
+      else if (foundUser.role === 'rrhh') initialScreen = 'visualizarMalla';
+      else if (foundUser.role === 'crew') initialScreen = 'miPlanilla';
+
+      nav(initialScreen);
     }
 
     function logout(){
@@ -679,7 +722,7 @@
             .join('');
     }
     
-    // Renderiza la tabla de malla para RR.HH. (Turnos)
+    // Renderiza la tabla de malla para RR.HH.
     function renderMallaRRHH() {
         const inicioSemana = document.getElementById('rrhhSemanaInicio').value;
         const weekDates = getDatesOfWeek(inicioSemana);
@@ -811,7 +854,7 @@
         
         // Reset de Solicitudes
         solicitudes = [
-            // Solicitud de Turno (Crew -> RRHH)
+            // Solicitud de Turno (Crew -> Gerente)
             { id: 1, tipo: 'Turno', empleado: 'Crew Constanza', turnoOriginalId: 102, turnoOriginal: '2025-10-29 15:00-20:00', turnoPedido: '2025-10-29 08:00-13:00', motivo: 'Cita médica', estado: 'Pendiente', fechaSolicitud: new Date().toLocaleString() },
             // Solicitud de Posición (Entrenador -> Gerente)
             { id: 2, tipo: 'PosicionEntrenador', empleado: 'Entrenador Juan', turnoOriginalId: 105, turnoOriginal: '2025-10-28 09:00-17:00', posicionOriginal: 'Sala', posicionPedida: 'Cocina', motivo: 'Necesito práctica en Cocina', estado: 'Pendiente', fechaSolicitud: new Date().toLocaleString() },
@@ -824,7 +867,7 @@
         document.getElementById('homeSolicitudesInfo').innerText = solicitudes.filter(s=>s.estado==='Pendiente').length;
     }
     
-    // Renderiza planilla completa (Gerente/Entrenador)
+    // Renderiza planilla completa (Gerente/Entrenador/RRHH)
     function renderMallaPublicada(){
         const tbody = document.querySelector('#tableMallaVisualizacion tbody');
         if (!tbody) return;
@@ -946,7 +989,7 @@
     }
 
 
-    /* ---------- FUNCIONES SOLICITUDES (Crew/Entrenador -> RR.HH./Gerente/Entrenador) ---------- */
+    /* ---------- FUNCIONES SOLICITUDES (Crew/Entrenador -> Gerente/Entrenador) ---------- */
     
     // Llena el select de turnos disponibles para cambio de POSICIÓN (Crew)
     function populateMisTurnosPosSelect(targetRole){
@@ -1019,7 +1062,7 @@
         document.getElementById('solicitarCambioTurnoForm').style.display = 'none';
         
         document.getElementById('homeSolicitudesInfo').innerText = solicitudes.filter(s=>s.estado==='Pendiente').length;
-        alert(`Solicitud de Turno enviada con éxito a RR.HH. (simulado)`);
+        alert(`Solicitud de Turno enviada con éxito al Gerente (simulado)`);
         nav('home');
     }
     
@@ -1096,7 +1139,7 @@
         nav('home');
     }
 
-    // Renderiza solicitudes para RR.HH. (Turno), Gerente (PosicionEntrenador) o Entrenador (PosicionCrew)
+    // Renderiza solicitudes para Gerente (Turno), Gerente (PosicionEntrenador) o Entrenador (PosicionCrew)
     function renderSolicitudes(tipo){
       let tbodyId;
       if (tipo === 'Turno') tbodyId = '#tableSolicitudesTurno tbody';
@@ -1117,7 +1160,7 @@
         let detalles;
         
         if (tipo === 'Turno') {
-          detalles = `<td>${s.turnoOriginal}</td><td>${s.turnoPedido}</td><td>${s.motivo}</td>`;
+          detalles = `<td>${s.turnoOriginal}</td><td>${s.turnoPedido}</td><td><td>${s.motivo}</td>`;
         } else { // PosicionEntrenador, PosicionCrew
           // Si es Entrenador pidiendo por otro, mostrar quién es el afectado
           if (tipo === 'PosicionEntrenador' && s.empleado !== s.empleadoAfectado) {
@@ -1147,6 +1190,7 @@
       s.estado = 'Aprobado';
       renderSolicitudes(tipo);
       document.getElementById('homeSolicitudesInfo').innerText = solicitudes.filter(s=>s.estado==='Pendiente').length;
+      updateHomeDashboard(); // Actualizar el dashboard si estamos en home
     }
     
     // Lógica para RECHAZAR solicitud
@@ -1156,6 +1200,7 @@
       s.estado = 'Rechazado';
       renderSolicitudes(tipo);
       document.getElementById('homeSolicitudesInfo').innerText = solicitudes.filter(s=>s.estado==='Pendiente').length;
+      updateHomeDashboard(); // Actualizar el dashboard si estamos en home
     }
 
     // Renderiza el estado de las solicitudes para el Crew/Entrenador
