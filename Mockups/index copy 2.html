@@ -208,6 +208,7 @@
             <div id="menuEntrenador" style="display:none">
               <button class="btn btn-sec" onclick="nav('visualizarMalla')">Malla con Posiciones</button>
               <button class="btn btn-sec" onclick="nav('solicitarCambioPosicionAll')">Solicitar Cambio de Posición (Todos)</button>
+              <button class="btn btn-sec" onclick="nav('historialPosicion')">Estado de Solicitudes (Mías)</button>
             </div>
             
             <div id="menuCrew" style="display:none">
@@ -263,7 +264,7 @@
           </section>
 
           <section id="home" class="screen">
-            <h2>Home</h2>
+            <h2>Home (Gerente)</h2>
             <div class="muted">Bienvenido a tu panel de control. Usa el menú lateral para gestionar tus tareas.</div>
             <div style="margin-top:12px">
               <div style="display:flex;gap:12px;flex-wrap:wrap">
@@ -419,8 +420,9 @@
             </table>
           </section>
           
+          
           <section id="solicitarCambioPosicionAll" class="screen">
-            <h2>Solicitar Cambio de Posición (Cualquier Turno)</h2>
+            <h2>Solicitar Cambio de Posición (Cualquier Turno) (Entrenador)</h2>
             <p class="muted">El Entrenador puede solicitar al Gerente cambiar la posición asignada en **cualquier turno** de la malla.</p>
             <form onsubmit="event.preventDefault(); enviarSolicitudEntrenadorPosicionAll()">
                 <label>Turno a Modificar</label>
@@ -468,14 +470,14 @@
             </div>
           </section>
           <section id="historialPosicion" class="screen">
-            <h2>Historial de Solicitudes de Posición (Entrenador)</h2>
-            <p class="muted">Historial de solicitudes de cambio de posición realizadas por el Entrenador.</p>
+            <h2>Estado de Solicitudes de Posición (Entrenador)</h2>
+            <p class="muted">Revisa el estado de las solicitudes de cambio de posición que has enviado al Gerente.</p>
             <table id="tableHistorialPosicion"><thead><tr><th>Fecha solicitud</th><th>Turno</th><th>Posición Pedida</th><th>Estado</th></tr></thead><tbody>
                   </tbody></table>
           </section>
 
           <section id="miPlanilla" class="screen">
-            <h2>Mi Horario y Posición Asignada</h2>
+            <h2>Mi Horario y Posición Asignada (Crew)</h2>
             <p class="muted">Tu horario personal (turnos y posición asignada por el Gerente).</p>
             <input type="text" id="filtroMiPlanilla" placeholder="Buscar por fecha (YYYY-MM-DD)..." style="width: 100%; margin-bottom: 10px;" onkeyup="renderMiPlanilla()">
             <table id="tableMiPlanilla"><thead><tr><th>Fecha</th><th>Inicio</th><th>Fin</th><th>Posición</th></tr></thead><tbody>
@@ -483,15 +485,15 @@
             </section>
 
           <section id="estadoSolicitudes" class="screen">
-            <h2>Estado de Mis Solicitudes de Cambio</h2>
-            <p class="muted">Aquí puedes ver el estado de tus solicitudes de cambio de turno (Gerente) y posición (Entrenador).</p>
-            <table id="tableEstadoSolicitudes"><thead><tr><th>Tipo</th><th>Turno Original</th><th>Turno Pedido/Posición Pedida</th><th>Estado</th></tr></thead><tbody>
+            <h2>Estado de Mis Solicitudes de Cambio (Crew)</h2>
+            <p class="muted">Aquí puedes ver el estado de tus solicitudes de cambio de turno (Gerente).</p>
+            <table id="tableEstadoSolicitudes"><thead><tr><th>Tipo</th><th>Turno Original</th><th>Turno Pedido</th><th>Estado</th></tr></thead><tbody>
                 </tbody></table>
           </section>
 
 
           <section id="historial" class="screen">
-            <h2>Historial de Turnos (Personales)</h2>
+            <h2>Historial de Turnos (Personales) (Crew)</h2>
             <p class="muted">Turnos completados y registros pasados.</p>
             <input type="text" id="filtroHistorial" placeholder="Buscar por fecha (YYYY-MM-DD)..." style="width: 100%; margin-bottom: 10px;" onkeyup="renderHistorial()">
             <table id="tableHistorial"><thead><tr><th>Fecha</th><th>Inicio</th><th>Fin</th><th>Posición</th></tr></thead><tbody>
@@ -539,24 +541,20 @@
 
     /* ---------- FUNCIONES HOME/DASHBOARD ---------- */
     function updateHomeDashboard() {
-        if (!currentUser) return; // Should not happen if logged in
+        if (!currentUser) return;
         
-        // Solo Gerente y Entrenador usan el home
-        if (currentUser.role !== 'gerente' && currentUser.role !== 'entrenador') return;
+        // Solo Gerente usa el home
+        if (currentUser.role !== 'gerente') return;
 
+        // FIX 1: Contar solo turnos de personal operativo (Crew o Entrenador) para la congruencia.
+        const operationalShifts = planillaPublicada.filter(t => t.cargo === 'Crew' || t.cargo === 'Entrenador');
+        
         // 1. Planilla Info 
-        document.getElementById('homePlanillaInfo').innerText = planillaPublicada.length + ' turnos publicados';
+        document.getElementById('homePlanillaInfo').innerText = operationalShifts.length + ' turnos operativos publicados'; 
         
         // 2. Solicitudes Pendientes
-        let pendingCount = 0;
-        
-        if (currentUser.role === 'gerente') {
-            // Gerente revisa Solicitudes de Turno ('Turno') y Solicitudes de Posición (Entr.) ('PosicionEntrenador')
-            pendingCount = solicitudes.filter(s => s.estado === 'Pendiente' && (s.tipo === 'Turno' || s.tipo === 'PosicionEntrenador')).length;
-        } else if (currentUser.role === 'entrenador') {
-            // Entrenador no revisa solicitudes pendientes de crew (ya se eliminó la sección)
-            pendingCount = 0; 
-        }
+        // Gerente revisa Solicitudes de Turno ('Turno') y Solicitudes de Posición (Entr.) ('PosicionEntrenador')
+        let pendingCount = solicitudes.filter(s => s.estado === 'Pendiente' && (s.tipo === 'Turno' || s.tipo === 'PosicionEntrenador')).length;
         
         document.getElementById('homeSolicitudesInfo').innerText = pendingCount;
     }
@@ -583,8 +581,8 @@
       // Ajuste de diseño: Si está logueado, ajusta el app para que no centre verticalmente
       document.querySelector('.app').classList.toggle('logged-in', !!currentUser);
       
-      // Mostrar Home button solo para Gerente y Entrenador (Roles que lo utilizan)
-      const showHome = currentUser && (currentUser.role === 'gerente' || currentUser.role === 'entrenador');
+      // Mostrar Home button solo para Gerente (Roles que lo utilizan)
+      const showHome = currentUser && (currentUser.role === 'gerente'); 
       document.getElementById('homeButton').style.display = showHome ? 'block' : 'none';
 
       // Acciones por pantalla que requieren renderizado
@@ -624,8 +622,9 @@
       // Redirección inicial según el rol (Requisito del usuario)
       let initialScreen = 'home';
       if (foundUser.role === 'admin') initialScreen = 'gestionUsuarios';
-      else if (foundUser.role === 'rrhh') initialScreen = 'visualizarMalla';
-      else if (foundUser.role === 'crew') initialScreen = 'miPlanilla';
+      else if (foundUser.role === 'rrhh') initialScreen = 'visualizarMalla'; // RRHH directo a Malla (Home eliminado)
+      else if (foundUser.role === 'entrenador') initialScreen = 'visualizarMalla'; // Entrenador directo a Malla (Home eliminado)
+      else if (foundUser.role === 'crew') initialScreen = 'miPlanilla'; // Crew directo a Planilla (Home eliminado)
 
       nav(initialScreen);
     }
@@ -824,6 +823,7 @@
             alert('Día marcado como Libre/No Asignado (Simulado)');
             toggleForm('formAgregarTurnoRRHH');
             renderMallaRRHH();
+            updateHomeDashboard();
             return;
         }
 
@@ -858,6 +858,7 @@
         
         toggleForm('formAgregarTurnoRRHH');
         renderMallaRRHH();
+        updateHomeDashboard();
     }
 
 
@@ -867,16 +868,16 @@
     function seedDemo(){
         // Reset de Planilla para IDs consistentes en el demo
         planillaPublicada = [
-            // Crew Constanza
+            // Crew Constanza (Operativo)
             { id: 101, empleado:'Crew Constanza', fecha:'2025-10-28', inicio:'08:00', fin:'13:00', cargo:'Crew', posicion:'Caja'},
             { id: 102, empleado:'Crew Constanza', fecha:'2025-10-29', inicio:'15:00', fin:'20:00', cargo:'Crew', posicion:'Cocina'},
-            // Crew Felipe
+            // Crew Felipe (Operativo)
             { id: 103, empleado:'Crew Felipe', fecha:'2025-10-28', inicio:'10:00', fin:'18:00', cargo:'Crew', posicion:'Cocina'},
             { id: 104, empleado:'Crew Felipe', fecha:'2025-10-31', inicio:'07:00', fin:'14:00', cargo:'Crew', posicion:null}, // Sin posicion para demostrar asignación
-            // Entrenador Juan
+            // Entrenador Juan (Operativo)
             { id: 105, empleado:'Entrenador Juan', fecha:'2025-10-28', inicio:'09:00', fin:'17:00', cargo:'Entrenador', posicion:'Sala'},
             { id: 106, empleado:'Entrenador Juan', fecha:'2025-10-30', inicio:'10:00', fin:'18:00', cargo:'Entrenador', posicion:'Automac'},
-            // Gerente Jefe (No debería aparecer en planificaciones operativas)
+            // Gerente Jefe (NO Operativo - No debe contar en Home Planilla Info)
             { id: 107, empleado:'Gerente Jefe', fecha:'2025-10-28', inicio:'07:00', fin:'15:00', cargo:'Gerente', posicion:'Oficina'},
         ];
         
@@ -886,13 +887,12 @@
             { id: 1, tipo: 'Turno', empleado: 'Crew Constanza', turnoOriginalId: 102, turnoOriginal: '2025-10-29 15:00-20:00', turnoPedido: '2025-10-29 08:00-13:00', motivo: 'Cita médica', estado: 'Pendiente', fechaSolicitud: new Date().toLocaleString(), motivoRechazo: null },
             // Solicitud de Posición (Entrenador -> Gerente)
             { id: 2, tipo: 'PosicionEntrenador', empleado: 'Entrenador Juan', turnoOriginalId: 105, turnoOriginal: '2025-10-28 09:00-17:00', posicionOriginal: 'Sala', posicionPedida: 'Cocina', motivo: 'Necesito práctica en Cocina', estado: 'Pendiente', fechaSolicitud: new Date().toLocaleString(), motivoRechazo: null },
-            // Solicitud de Posición (Crew -> Entrenador) - ELIMINADA DE CREW, pero la dejamos para demostrar la visibilidad del rechazo
-            { id: 3, tipo: 'PosicionCrew', empleado: 'Crew Constanza', turnoOriginalId: 101, turnoOriginal: '2025-10-28 08:00-13:00', posicionOriginal: 'Caja', posicionPedida: 'Automac', motivo: 'Más cómodo en Automac', estado: 'Pendiente', fechaSolicitud: new Date().toLocaleString(), motivoRechazo: null },
+            // Solicitud de Posición (Crew -> Entrenador) - (Funcionalidad eliminada, pero la dejamos para demostrar visibilidad del rechazo en el historial de Crew)
+            { id: 3, tipo: 'PosicionCrew', empleado: 'Crew Constanza', turnoOriginalId: 101, turnoOriginal: '2025-10-28 08:00-13:00', posicionOriginal: 'Caja', posicionPedida: 'Automac', motivo: 'Más cómodo en Automac', estado: 'Rechazado', fechaSolicitud: new Date().toLocaleString(), motivoRechazo: 'No hay personal disponible en Caja para cubrir su puesto en ese horario.' },
         ];
         
-        alert('Demo cargado con planilla y 3 solicitudes pendientes.');
-        document.getElementById('homePlanillaInfo').innerText = planillaPublicada.length + ' turnos publicados';
-        updateHomeDashboard();
+        alert(`Demo cargado: ${planillaPublicada.length} turnos totales, 6 operativos y 2 solicitudes pendientes.`);
+        updateHomeDashboard(); // Actualiza contadores del Home
     }
     
     // Renderiza planilla completa (Gerente/Entrenador/RRHH)
@@ -989,7 +989,6 @@
       
       const filtro = document.getElementById('filtroMiPlanilla').value.toLowerCase();
         
-      // Se eliminó el botón de solicitar cambio de turno de esta vista
       const mis = planillaPublicada.filter(t => t.empleado.toLowerCase() === currentUser.name.toLowerCase() && t.fecha.includes(filtro));
 
       mis.forEach(t=>{
@@ -1025,7 +1024,8 @@
         sel.innerHTML = '';
         if(!currentUser) return;
         
-        const mis = planillaPublicada.filter(t=>t.empleado.toLowerCase() === currentUser.name.toLowerCase());
+        // Filtra solo turnos con horas asignadas (no días libres)
+        const mis = planillaPublicada.filter(t=>t.empleado.toLowerCase() === currentUser.name.toLowerCase() && t.inicio !== 'Libre');
         
         if(mis.length===0){
             const opt = document.createElement('option'); opt.text='(No tienes turnos asignados)'; opt.value=''; sel.appendChild(opt); return;
@@ -1050,8 +1050,8 @@
       const sel = document.getElementById('selectTodosLosTurnos');
       sel.innerHTML = '';
       
-      // Entrenador puede cambiar la posición de CUALQUIER turno operativo (Crew/Entrenador)
-      const todosOperativos = planillaPublicada.filter(t => t.cargo === 'Crew' || t.cargo === 'Entrenador');
+      // Entrenador puede cambiar la posición de CUALQUIER turno operativo (Crew/Entrenador) que tenga horario.
+      const todosOperativos = planillaPublicada.filter(t => (t.cargo === 'Crew' || t.cargo === 'Entrenador') && t.inicio !== 'Libre');
       
       if(todosOperativos.length===0){
         const opt = document.createElement('option'); opt.text='(No hay turnos operativos publicados)'; opt.value=''; sel.appendChild(opt); return;
@@ -1101,15 +1101,9 @@
         nav('miPlanilla'); // Redirección a su planilla
     }
     
-    // Enviar solicitud (Mantiene el switch para Turno y las antiguas de Posición que ya eliminamos la sección de Crew)
+    // Wrapper para enviar solicitud (solo maneja Turno ya que Posición Crew fue eliminada)
     function enviarSolicitud(tipo) {
         if (tipo === 'Turno') return enviarSolicitudTurno(); 
-
-        if(!currentUser) return alert('Debes iniciar sesión.');
-        // Esta lógica de PosicionCrew ya no será llamada porque el botón de Crew fue eliminado.
-        // Se mantiene la función por si se llama desde PosicionEntrenador, aunque ese tiene su propia función.
-        alert('Esta funcionalidad de solicitud de posición para Crew fue eliminada del menú.');
-        return;
     }
     
     // Enviar solicitud de Posicion (Entrenador - Todos los turnos)
@@ -1146,7 +1140,7 @@
         
         updateHomeDashboard();
         alert(`Solicitud de Posición (Global) enviada con éxito al Gerente (simulado)`);
-        nav('home');
+        nav('historialPosicion'); // Redirige a su historial de solicitudes
     }
 
     // Renderiza solicitudes para Gerente (Turno) o Gerente (PosicionEntrenador)
@@ -1219,28 +1213,21 @@
       s.estado = 'Rechazado';
       s.motivoRechazo = motivoRechazo.trim();
       
-      // La solicitud de Crew va al Gerente y la revisa, pero la solicitud de PosicionCrew fue eliminada
-      // Aseguramos que solo renderice la vista actual.
       renderSolicitudes(tipo);
       updateHomeDashboard(); // Actualizar el dashboard si estamos en home
     }
 
-    // Renderiza el estado de las solicitudes para el Crew/Entrenador
+    // Renderiza el estado de las solicitudes para el Crew
     function renderEstadoSolicitudes(){
         const tbody = document.querySelector('#tableEstadoSolicitudes tbody');
         if (!tbody) return;
         tbody.innerHTML = '';
         
-        // Filtra las solicitudes que son del usuario actual (Crew o Entrenador)
-        const mine = currentUser ? solicitudes.filter(s=>s.empleado.toLowerCase()===currentUser.name.toLowerCase()) : [];
+        // Filtra solo las solicitudes de Turno para Crew (ya que PosicionCrew fue eliminada)
+        const mine = currentUser ? solicitudes.filter(s=>s.empleado.toLowerCase()===currentUser.name.toLowerCase() && s.tipo === 'Turno') : [];
         
         mine.forEach(s=>{
-            let detalle;
-            if (s.tipo === 'Turno') {
-                detalle = `<td>${s.turnoOriginal}</td><td>Turno: ${s.turnoPedido}</td>`;
-            } else { // PosicionEntrenador, PosicionCrew
-                detalle = `<td>${s.turnoOriginal} (Pos. Org: ${s.posicionOriginal || 'N/A'})</td><td>Posición: ${s.posicionPedida}</td>`;
-            }
+            let detalle = `<td>${s.turnoOriginal}</td><td>Turno: ${s.turnoPedido}</td>`;
             
             let comentarioRechazo = '';
             if (s.estado === 'Rechazado' && s.motivoRechazo) {
@@ -1271,12 +1258,13 @@
         });
     }
     
-    // Renderiza el historial de solicitudes de posición (Entrenador)
+    // Renderiza el historial de solicitudes de posición (Entrenador) - Renombrado a "Estado de Solicitudes (Mías)"
     function renderHistorialPosicion() {
         const tbody = document.querySelector('#tableHistorialPosicion tbody');
         if (!tbody) return;
         tbody.innerHTML = '';
 
+        // Filtra solo solicitudes de posición realizadas por el Entrenador (tipo 'PosicionEntrenador')
         const mine = currentUser ? solicitudes.filter(s => s.tipo === 'PosicionEntrenador' && s.empleado.toLowerCase() === currentUser.name.toLowerCase()) : [];
 
         mine.forEach(s => {
