@@ -1,0 +1,1219 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Mockups SCT - McDonald's</title>
+  <style>
+    /* ==========================================
+      Estilos globales - Paleta McDonald's
+      ========================================== */
+    :root{
+      --mc-red: #D91D0E;
+      --mc-yellow: #FFC300;
+      --mc-dark: #222;
+      --mc-light: #f7f7f7;
+      --card-radius:16px;
+      --gap:14px;
+      font-family: Inter, system-ui, Arial, sans-serif;
+    }
+    html,body{height:100%;margin:0;background:linear-gradient(180deg, var(--mc-yellow) 0%, var(--mc-yellow) 50%, #ffffff 100%);}
+    .app{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+
+    /* Contenedor principal */
+    .frame{width:100%;max-width:1300px;background:white;border-radius:18px;padding:18px;box-shadow:0 6px 28px rgba(0,0,0,0.12); border: 4px solid var(--mc-red);}
+
+    /* --- Nuevo Diseño de Encabezado --- */
+    /* El .app ya no centra verticalmente para las pantallas de rol */
+    .app.logged-in {
+      align-items: flex-start; /* Alinear arriba cuando está logueado */
+      padding-top: 0;
+      padding-bottom: 20px;
+    }
+    .app.logged-in .frame {
+      padding-bottom: 30px; /* Espacio extra en el fondo */
+      min-height: calc(100vh - 40px);
+    }
+    .app:not(.logged-in) .frame {
+      min-width: 400px; /* Ancho mínimo para la vista de login */
+    }
+
+    header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:18px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #eee; /* Separador */
+    }
+    .brand{display:flex;align-items:center;gap:12px}
+
+    /* Logo Placeholder Style */
+    .logo-container {
+      width: 50px; height: 50px;
+      background: transparent;
+      border: 3px solid var(--mc-yellow);
+      border-radius: 50%;
+      display: flex; justify-content: center; align-items: center;
+      font-size: 30px; font-weight: 900; color: var(--mc-red);
+      line-height: 0;
+      box-shadow: 0 0 0 5px var(--mc-red);
+    }
+    /* Estilo para si el usuario usa una imagen */
+    .logo-img { width: 50px; height: auto; }
+
+    h1{font-size:24px;margin:0;color:var(--mc-dark)}
+    h2{color: var(--mc-red);}
+    .role-badge{background:var(--mc-red);color:white;padding:8px 12px;border-radius:999px;font-weight:600}
+
+    /* Layout principal - columnas */
+    .container{display:grid;grid-template-columns:250px 1fr;gap:18px}
+    /* Para el login, centrar el main en el frame */
+    .app:not(.logged-in) .container {
+      display: flex;
+      justify-content: center;
+    }
+    .app:not(.logged-in) .sidebar {
+      display: none;
+    }
+    .app:not(.logged-in) .main {
+      width: 100%;
+      max-width: 400px;
+      margin-top: 30px;
+    }
+
+    /* Sidebar / menú */
+    .sidebar{background:var(--mc-light);border-radius:12px;padding:12px;border:2px solid rgba(0,0,0,0.08)}
+    .side-block{display:flex;flex-direction:column;gap:10px}
+    
+    /* Eliminar espacio entre HOME y botones de rol */
+    .side-block > .menu-btn { margin-bottom: 10px; }
+    
+    button.menu-btn, .btn-primary{background:var(--mc-red);color:white;border:none;padding:10px;border-radius:10px;font-weight:600;cursor:pointer}
+    .btn-sec{background:var(--mc-yellow);color:var(--mc-dark);border:none;}
+    .small{font-size:13px;color:#333}
+
+    /* Main content area */
+    .main{background:#fff;border-radius:12px;padding:14px;min-height:460px;border:2px solid rgba(0,0,0,0.03)}
+    .screen{display:none}
+    .screen.active{display:block}
+    
+    /* Para formularios más anchos en las pantallas logueadas */
+    .app.logged-in form {
+      max-width: 600px;
+      margin: 0 auto; /* Centrar formularios */
+    }
+    .app.logged-in .main h2 {
+      text-align: center;
+      margin-top: 0;
+    }
+    .app.logged-in .main .muted:first-of-type {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+
+    /* Formularios y tablas */
+    form{display:flex;flex-direction:column;gap:10px}
+    label{font-weight:600;font-size:13px}
+    input[type="text"], input[type="time"], input[type="date"], input[type="password"], select, textarea{padding:8px;border-radius:8px;border:1px solid #ddd;font-size:14px; background: #fff;}
+    textarea{min-height:80px}
+    .row{display:flex;gap:10px}
+    .row .col{flex:1}
+    /* Para botones auto en la fila */
+    .row .col-auto {
+      flex: 0 0 auto;
+    }
+    .muted{color:#666;font-size:13px}
+
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:10px;border-bottom:1px solid #eee;text-align:left}
+    th{background:var(--mc-light);font-weight: 700;}
+
+    .actions{display:flex;gap:8px;align-items:center}
+    .btn{padding:8px 12px;border-radius:8px;border:none;cursor:pointer}
+    .btn-sec{background:var(--mc-yellow)}
+    .btn-approve { background: #4CAF50; color: white; }
+    .btn-reject { background: var(--mc-red); color: white; }
+
+    /* Estados de Solicitud */
+    .estado-aprobado { color: green; font-weight: bold; }
+    .estado-rechazado { color: var(--mc-red); font-weight: bold; }
+    .estado-pendiente { color: #8a6d3b; background: #fcf8e3; padding: 3px 6px; border-radius: 5px; font-size: 12px; border: 1px solid #faebcc;} /* Nuevo estilo de pendiente */
+
+    /* Contenedores específicos */
+    .grid-malla { display: grid; grid-template-columns: repeat(8, 1fr); gap: 5px; margin-top: 15px; }
+    .day-header { background: var(--mc-red); color: white; padding: 8px; text-align: center; font-weight: bold; border-radius: 5px 5px 0 0; }
+    .turno-box { background: var(--mc-yellow); padding: 5px; border-radius: 5px; font-size: 12px; text-align: center; margin-bottom: 5px; cursor: pointer; }
+    .turno-box.pendiente { border: 2px dashed #f0ad4e; } /* Para turnos nuevos o editados */
+
+    /* Responsivo */
+    @media(max-width:900px){
+      .container{grid-template-columns:1fr}
+      .sidebar{order:2}
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="frame">
+
+      <header>
+        <div class="brand">
+          <img src="logo_mc.png" alt="McDonald's Logo" class="logo-img">
+          <div>
+            <h1>Sistema de Control de Turnos McDonald's</h1>
+            <div class="muted">Diseño de Mockup Funcional - 5 Roles</div>
+          </div>
+        </div>
+        <div id="headerRole" class="role-badge">Rol: Invitado</div>
+      </header>
+
+      <div class="container">
+
+        <aside class="sidebar">
+          <div class="side-block">
+            <div id="userBox">
+              <div class="muted">Usuario:</div>
+              <div id="userName" style="font-weight:700">(no has iniciado sesión)</div>
+            </div>
+            
+            <button class="menu-btn" onclick="nav('home')">Home</button>
+
+            <div id="menuAdmin" style="display:none">
+              <button class="btn btn-sec" onclick="nav('gestionUsuarios')">Gestión de Usuarios</button>
+            </div>
+            
+            <div id="menuRRHH" style="display:none">
+              <button class="btn btn-sec" onclick="nav('planificarRRHH')">Crear Malla Horaria</button>
+              <button class="btn btn-sec" onclick="nav('revisarSolicitudesTurno')">Solicitudes de Cambio de Turno</button>
+            </div>
+            
+            <div id="menuGerente" style="display:none">
+              <button class="btn btn-sec" onclick="nav('visualizarMalla')">Visualizar Malla Horaria</button>
+              <button class="btn btn-sec" onclick="nav('planificarPosiciones')">Planificar Posiciones</button>
+              <button class="btn btn-sec" onclick="nav('revisarSolicitudesPosicion')">Solicitudes de Posición (Entr.)</button>
+            </div>
+            
+            <div id="menuEntrenador" style="display:none">
+              <button class="btn btn-sec" onclick="nav('visualizarMalla')">Malla con Posiciones</button>
+              <button class="btn btn-sec" onclick="nav('solicitarCambioPosicionAll')">Solicitar Cambio de Posición (Todos)</button>
+              <button class="btn btn-sec" onclick="nav('revisarSolicitudesPosicionCrew')">Aprobar Solicitudes de Crew</button>
+            </div>
+            
+            <div id="menuCrew" style="display:none">
+              <button class="btn btn-sec" onclick="nav('miPlanilla')">Mi Horario y Posición</button>
+              <button class="btn btn-sec" onclick="nav('solicitarCambioPosicion')">Solicitar Cambio de Posición</button>
+              <button class="btn btn-sec" onclick="nav('estadoSolicitudes')">Estado de Solicitudes</button>
+              <button class="btn btn-sec" onclick="nav('historial')">Historial de Turnos</button>
+            </div>
+
+            <div style="margin-top:10px">
+              <button class="btn" id="btnLogout" style="display:none" onclick="logout()">Cerrar sesión</button>
+              <button class="btn btn-primary" id="btnLogin" onclick="nav('login')">Iniciar sesión</button>
+            </div>
+            
+            <div style="margin-top:18px" class="muted">Tips de Prueba:</div>
+            <div class="muted" style="font-size:12px">
+              Usuario/Contraseña: `demo`/`1234`<br>
+              Roles a probar: `admin`, `rrhh`, `gerente`, `entrenador`, `crew`.
+            </div>
+          </div>
+        </aside>
+
+        <main class="main">
+
+          <section id="login" class="screen active">
+            <h2>Login de Acceso</h2>
+            <p class="muted">Ingresa tu usuario, contraseña y rol para acceder al sistema.</p>
+            <form onsubmit="event.preventDefault(); doLogin()">
+              <label>Usuario</label>
+              <input id="loginUsuario" type="text" placeholder="Ej: demo" required>
+              
+              <label>Contraseña</label>
+              <input id="loginPass" type="password" placeholder="Ej: 1234" required>
+
+              <label>Rol</label>
+              <select id="loginRol">
+                <option value="admin">Admin</option>
+                <option value="rrhh">RR.HH.</option>
+                <option value="gerente">Gerente</option>
+                <option value="entrenador">Entrenador</option>
+                <option value="crew">Crew</option>
+              </select>
+
+              <div class="row">
+                <div class="col">
+                  <button class="btn btn-primary" type="submit">Ingresar</button>
+                </div>
+                <div class="col">
+                  <button class="btn btn-sec" type="button" onclick="seedDemo()">Cargar Demo</button>
+                </div>
+              </div>
+            </form>
+          </section>
+
+          <section id="home" class="screen">
+            <h2>Home</h2>
+            <div class="muted">Bienvenido a tu panel de control. Usa el menú lateral para gestionar tus tareas.</div>
+            <div style="margin-top:12px">
+              <div style="display:flex;gap:12px;flex-wrap:wrap">
+                <div style="flex:1;min-width:220px;background:var(--mc-light);padding:12px;border-radius:10px">
+                  <strong>Planilla publicada:</strong>
+                  <div id="homePlanillaInfo" class="muted">Sin datos cargados</div>
+                </div>
+                <div style="flex:1;min-width:220px;background:var(--mc-light);padding:12px;border-radius:10px">
+                  <strong>Solicitudes pendientes:</strong>
+                  <div id="homeSolicitudesInfo" class="muted">0</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section id="gestionUsuarios" class="screen">
+            <h2>Gestión de Usuarios (Admin)</h2>
+            <button class="btn btn-primary" onclick="toggleForm('formCrearUsuario')">Crear Nuevo Usuario</button>
+            <p class="muted">El Admin puede crear, editar y eliminar cualquier usuario del sistema.</p>
+
+            <div id="formCrearUsuario" style="display:none; border:1px solid #ddd; padding:15px; border-radius:10px; margin-top:10px;">
+                <h3>Crear/Editar Usuario</h3>
+                <form onsubmit="event.preventDefault(); alert('Usuario guardado/creado (simulado)'); toggleForm('formCrearUsuario'); renderTablaUsuarios()">
+                    <label>Nombre Completo</label><input type="text" placeholder="Nombre Apellido">
+                    <label>Usuario (Login)</label><input type="text" placeholder="user.login">
+                    <label>Contraseña</label><input type="password" placeholder="********">
+                    <label>Rol</label>
+                    <select>
+                        <option>Crew</option><option>Gerente</option><option>Admin</option><option>RR.HH.</option><option>Entrenador</option>
+                    </select>
+                    <div style="margin-top: 10px;">
+                        <button class="btn btn-primary" type="submit">Guardar Usuario</button>
+                        <button class="btn" type="button" onclick="toggleForm('formCrearUsuario')">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+
+            <h3 style="margin-top: 20px;">Listado de Usuarios</h3>
+            <input type="text" id="filtroUsuarios" placeholder="Buscar por Nombre o Rol..." style="width: 100%; margin-bottom: 10px;" onkeyup="renderTablaUsuarios()">
+            <table id="tableUsuarios">
+                <thead><tr><th>Nombre</th><th>Rol</th><th>Usuario</th><th>Última Modif.</th><th>Acciones</th></tr></thead>
+                <tbody></tbody>
+            </table>
+          </section>
+
+          <section id="planificarRRHH" class="screen">
+            <h2>Creación de Malla Horaria Semanal (RR.HH.)</h2>
+            <p class="muted">Planifique los turnos por empleado. El Gerente añadirá las posiciones después.</p>
+
+            <form onsubmit="event.preventDefault(); toggleForm('formAgregarTurnoRRHH')">
+                <div class="row">
+                    <div class="col">
+                        <label>Inicio de Semana</label><input type="date" id="rrhhSemanaInicio" value="2025-10-28">
+                    </div>
+                    <div class="col">
+                        <label>Fin de Semana</label><input type="date" id="rrhhSemanaFin" value="2025-11-03">
+                    </div>
+                </div>
+                <div class="row" style="margin-bottom: 10px; margin-top: 10px;">
+                    <div class="col-auto"><button class="btn btn-primary" type="button" onclick="alert('Malla publicada. Gerente puede añadir posiciones.')">Publicar Malla</button></div>
+                    <div class="col-auto"><button class="btn btn-sec" type="button">Cargar CSV</button></div>
+                    <div class="col-auto"><button class="btn" type="submit">Agregar Turno Manual</button></div>
+                </div>
+            </form>
+            
+            <div id="formAgregarTurnoRRHH" style="display:none; border:1px solid #ddd; padding:15px; border-radius:10px; margin-top:10px;">
+                <h3>Agregar/Editar Turno</h3>
+                <form onsubmit="event.preventDefault(); guardarTurnoRRHH();">
+                    <label>Empleado</label>
+                    <select id="rrhhEmpleadoTurno">
+                        </select>
+                    <label>Día del Turno</label>
+                    <select id="rrhhDiaTurno">
+                        </select>
+                    <div class="row">
+                        <div class="col">
+                            <label>Hora Inicio</label><input type="time" id="rrhhHoraInicio" required>
+                        </div>
+                        <div class="col">
+                            <label>Hora Fin</label><input type="time" id="rrhhHoraFin" required>
+                        </div>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <button class="btn btn-primary" type="submit">Guardar Turno</button>
+                        <button class="btn" type="button" onclick="toggleForm('formAgregarTurnoRRHH')">Cancelar</button>
+                    </div>
+                    <input type="hidden" id="rrhhTurnoId" value="">
+                </form>
+            </div>
+
+            <h3 style="margin-top: 20px;">Vista Semanal (Simulación)</h3>
+            <div id="rrhhMallaContainer">
+                <p class="muted">Cargando malla...</p>
+            </div>
+          </section>
+
+          <section id="revisarSolicitudesTurno" class="screen">
+            <h2>Solicitudes de Cambio de Turno Pendientes (RR.HH.)</h2>
+            <p class="muted">Revisa y aprueba/rechaza los cambios solicitados por el Crew.</p>
+            <table id="tableSolicitudesTurno">
+              <thead><tr><th>Empleado</th><th>Turno original</th><th>Turno pedido</th><th>Motivo</th><th>Estado</th><th>Acciones</th></tr></thead>
+              <tbody>
+                </tbody>
+            </table>
+          </section>
+
+          <section id="visualizarMalla" class="screen">
+            <h2>Visualizar Malla Horaria (Turnos + Posiciones)</h2>
+            <p class="muted">Vista de la malla completa (turnos creados por RR.HH. y posiciones añadidas por el Gerente).</p>
+            <input type="text" id="filtroMallaVisualizacion" placeholder="Buscar por Empleado, Posición o Fecha..." style="width: 100%; margin-bottom: 10px;" onkeyup="renderMallaPublicada()">
+            <table id="tableMallaVisualizacion">
+                <thead><tr><th>Empleado</th><th>Fecha</th><th>Inicio</th><th>Fin</th><th>Cargo</th><th>Posición</th></tr></thead>
+                <tbody>
+                    </tbody>
+            </table>
+          </section>
+          
+          <section id="planificarPosiciones" class="screen">
+            <h2>Planificar Posiciones del Personal Operativo (Gerente)</h2>
+            <p class="muted">Asigna la posición operativa (Caja, Cocina, Automac) a cada turno en la malla publicada.</p>
+            
+            <div class="row" style="margin-bottom: 15px;">
+                <div class="col-auto"><button class="btn btn-primary" onclick="alert('Posiciones publicadas. Entrenador puede visualizar.')">Publicar Posiciones</button></div>
+            </div>
+
+            <h3 style="margin-top: 15px;">Malla para Asignación de Posición</h3>
+            <input type="text" id="filtroPlanifPosiciones" placeholder="Buscar por Empleado, Posición o Fecha..." style="width: 100%; margin-bottom: 10px;" onkeyup="renderPlanifPosiciones()">
+            <table id="tablePlanifPosiciones">
+                <thead><tr><th>Empleado</th><th>Fecha</th><th>Turno</th><th>Posición Actual</th><th>Acciones</th></tr></thead>
+                <tbody>
+                    </tbody>
+            </table>
+          </section>
+
+          <section id="revisarSolicitudesPosicion" class="screen">
+            <h2>Solicitudes de Cambio de Posición Pendientes (Gerente)</h2>
+            <p class="muted">Revisa y aprueba/rechaza los cambios de posición solicitados por los Entrenadores.</p>
+            <table id="tableSolicitudesPosicion">
+              <thead><tr><th>Entrenador</th><th>Turno</th><th>Posición Original</th><th>Posición Pedida</th><th>Motivo</th><th>Estado</th><th>Acciones</th></tr></thead>
+              <tbody>
+                </tbody>
+            </table>
+          </section>
+          
+          <section id="revisarSolicitudesPosicionCrew" class="screen">
+            <h2>Solicitudes de Cambio de Posición Pendientes (Entrenador)</h2>
+            <p class="muted">Revisa y aprueba/rechaza los cambios de posición solicitados por el Crew.</p>
+            <table id="tableSolicitudesPosicionCrew">
+              <thead><tr><th>Crew</th><th>Turno</th><th>Posición Original</th><th>Posición Pedida</th><th>Motivo</th><th>Estado</th><th>Acciones</th></tr></thead>
+              <tbody>
+                </tbody>
+            </table>
+          </section>
+          
+          <section id="solicitarCambioPosicionAll" class="screen">
+            <h2>Solicitar Cambio de Posición (Cualquier Turno)</h2>
+            <p class="muted">El Entrenador puede solicitar al Gerente cambiar la posición asignada en **cualquier turno** de la malla.</p>
+            <form onsubmit="event.preventDefault(); enviarSolicitudEntrenadorPosicionAll()">
+                <label>Turno a Modificar</label>
+                <select id="selectTodosLosTurnos" style="width: 100%;"></select>
+
+                <label>Posición Solicitada</label>
+                <input id="posicionPedidaAll" type="text" placeholder="Ej: Cocina" required>
+
+                <label>Motivo del cambio</label>
+                <textarea id="motivoCambioPosAll" placeholder="Explica brevemente por qué solicitas el cambio" required></textarea>
+
+                <div style="display:flex;gap:8px;margin-top:8px;">
+                    <button class="btn btn-primary" type="submit">Enviar solicitud</button>
+                </div>
+            </form>
+          </section>
+          
+          <section id="solicitarCambioPosicion" class="screen">
+            <h2>Solicitar Cambio de Posición (a Entrenador)</h2>
+            <p class="muted">El Crew puede solicitar al Entrenador cambiar su posición asignada en un turno específico.</p>
+            <form onsubmit="event.preventDefault(); enviarSolicitud('PosicionCrew')"> <label>Turno Asignado</label>
+              <select id="selectMisTurnosPos" style="width: 100%;"></select>
+
+              <label>Posición Solicitada</label>
+              <input id="posicionPedida" type="text" placeholder="Ej: Automac Drive" required>
+
+              <label>Motivo del cambio</label>
+              <textarea id="motivoCambioPos" placeholder="Explica brevemente por qué solicitas el cambio" required></textarea>
+
+              <div style="display:flex;gap:8px;margin-top:8px;">
+                <button class="btn btn-primary" type="submit">Enviar solicitud</button>
+              </div>
+            </form>
+          </section>
+          
+          <section id="historialPosicion" class="screen">
+            <h2>Historial de Solicitudes de Posición (Entrenador)</h2>
+            <p class="muted">Historial de solicitudes de cambio de posición realizadas por el Entrenador.</p>
+            <table id="tableHistorialPosicion"><thead><tr><th>Fecha solicitud</th><th>Turno</th><th>Posición Pedida</th><th>Estado</th></tr></thead><tbody>
+                  </tbody></table>
+          </section>
+
+          <section id="miPlanilla" class="screen">
+            <h2>Mi Horario y Posición Asignada</h2>
+            <p class="muted">Tu horario personal (turnos y posición asignada por el Gerente).</p>
+            <input type="text" id="filtroMiPlanilla" placeholder="Buscar por fecha (YYYY-MM-DD)..." style="width: 100%; margin-bottom: 10px;" onkeyup="renderMiPlanilla()">
+            <table id="tableMiPlanilla"><thead><tr><th>Fecha</th><th>Inicio</th><th>Fin</th><th>Posición</th><th>Acción</th></tr></thead><tbody>
+                </tbody></table>
+            <div id="solicitarCambioTurnoForm" style="display:none; border:1px solid #ddd; padding:15px; border-radius:10px; margin-top:20px;">
+                <h3>Solicitar Cambio de Turno (a RR.HH.)</h3>
+                <p class="muted">Selecciona el turno que quieres cambiar y sugiere una alternativa.</p>
+                <form onsubmit="event.preventDefault(); enviarSolicitud('Turno')">
+                    <input type="hidden" id="turnoIdACambiar"> <p>Turno Original: <strong id="turnoOriginalInfo"></strong></p>
+
+                    <label>Turno Sugerido (fecha/hora)</label>
+                    <input id="sugFecha" type="date" required>
+                    <div class="row">
+                        <div class="col"><input id="sugInicio" type="time" required></div>
+                        <div class="col"><input id="sugFin" type="time" required></div>
+                    </div>
+
+                    <label>Motivo del cambio</label>
+                    <textarea id="motivoCambio" placeholder="Explica brevemente por qué solicitas el cambio" required></textarea>
+
+                    <div style="display:flex;gap:8px;margin-top:8px;">
+                        <button class="btn btn-primary" type="submit">Enviar solicitud</button>
+                        <button class="btn" type="button" onclick="toggleForm('solicitarCambioTurnoForm')">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+          </section>
+
+          <section id="estadoSolicitudes" class="screen">
+            <h2>Estado de Mis Solicitudes de Cambio</h2>
+            <p class="muted">Aquí puedes ver el estado de tus solicitudes de cambio de turno (RR.HH.) y posición (Entrenador).</p>
+            <table id="tableEstadoSolicitudes"><thead><tr><th>Tipo</th><th>Turno Original</th><th>Turno Pedido/Posición Pedida</th><th>Estado</th></tr></thead><tbody>
+                </tbody></table>
+          </section>
+
+
+          <section id="historial" class="screen">
+            <h2>Historial de Turnos (Personales)</h2>
+            <p class="muted">Turnos completados y registros pasados.</p>
+            <input type="text" id="filtroHistorial" placeholder="Buscar por fecha (YYYY-MM-DD)..." style="width: 100%; margin-bottom: 10px;" onkeyup="renderHistorial()">
+            <table id="tableHistorial"><thead><tr><th>Fecha</th><th>Inicio</th><th>Fin</th><th>Posición</th></tr></thead><tbody>
+                </tbody></table>
+          </section>
+          
+        </main>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ======================================
+      Variables en memoria (simulan DB temporal)
+      ====================================== */
+
+    let currentUser = null; // {name, role}
+    let allUsers = [
+        { name: 'Admin User', role: 'admin', user: 'admin', pass: '1234' },
+        { name: 'Ricardo RRHH', role: 'rrhh', user: 'rrhh', pass: '1234' },
+        { name: 'Gerente Jefe', role: 'gerente', user: 'gerente', pass: '1234' },
+        { name: 'Entrenador Juan', role: 'entrenador', user: 'entrenador', pass: '1234' },
+        { name: 'Crew Constanza', role: 'crew', user: 'crew', pass: '1234' },
+        { name: 'Crew Felipe', role: 'crew', user: 'felipe', pass: '1234' }, // Para demo de Entrenador
+    ];
+
+    let planillaPublicada = []; // Malla con Turnos + Posiciones
+    let solicitudes = []; // Todas las solicitudes (Turno, PosicionEntrenador, PosicionCrew)
+
+    const ROLES = {
+        admin: 'Admin',
+        rrhh: 'RR.HH.',
+        gerente: 'Gerente',
+        entrenador: 'Entrenador',
+        crew: 'Crew'
+    };
+
+    const POSICIONES_BASE = ['Caja', 'Cocina', 'Automac', 'Sala', 'Lobby'];
+    
+    // Función de utilidad para alternar formularios
+    function toggleForm(id){
+        const el = document.getElementById(id);
+        el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    }
+
+    // Navegación simple entre "pantallas" (secciones) del mockup
+    function nav(screenId){
+      document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+      const screen = document.getElementById(screenId);
+      if(screen) screen.classList.add('active');
+
+      // Mostrar/ocultar menús según rol
+      document.getElementById('menuAdmin').style.display = (currentUser && currentUser.role==='admin') ? 'block' : 'none';
+      document.getElementById('menuRRHH').style.display = (currentUser && currentUser.role==='rrhh') ? 'block' : 'none';
+      document.getElementById('menuGerente').style.display = (currentUser && currentUser.role==='gerente') ? 'block' : 'none';
+      document.getElementById('menuEntrenador').style.display = (currentUser && currentUser.role==='entrenador') ? 'block' : 'none';
+      document.getElementById('menuCrew').style.display = (currentUser && currentUser.role==='crew') ? 'block' : 'none';
+
+      document.getElementById('btnLogin').style.display = currentUser ? 'none' : 'inline-block';
+      document.getElementById('btnLogout').style.display = currentUser ? 'inline-block' : 'none';
+
+      document.getElementById('headerRole').innerText = currentUser ? `Rol: ${ROLES[currentUser.role]}` : 'Rol: Invitado';
+
+      // Ajuste de diseño: Si está logueado, ajusta el app para que no centre verticalmente
+      document.querySelector('.app').classList.toggle('logged-in', !!currentUser);
+      
+      // Acciones por pantalla que requieren renderizado
+      if(screenId==='gestionUsuarios') renderTablaUsuarios();
+      if(screenId==='planificarRRHH') renderMallaRRHH(); // Función modificada
+      if(screenId==='miPlanilla') {
+        renderMiPlanilla();
+        toggleForm('solicitarCambioTurnoForm', true); // Asegurar que esté oculto
+      }
+      if(screenId==='visualizarMalla') renderMallaPublicada();
+      if(screenId==='planificarPosiciones') renderPlanifPosiciones();
+      if(screenId==='revisarSolicitudesTurno') renderSolicitudes('Turno');
+      if(screenId==='revisarSolicitudesPosicion') renderSolicitudes('PosicionEntrenador'); // Gerente revisa Entrenador
+      if(screenId==='revisarSolicitudesPosicionCrew') renderSolicitudes('PosicionCrew'); // Entrenador revisa Crew
+      if(screenId==='historial') renderHistorial();
+      if(screenId==='estadoSolicitudes') renderEstadoSolicitudes();
+      if(screenId==='solicitarCambioPosicionAll') populateTurnosAllSelect(); // Entrenador
+      if(screenId==='solicitarCambioPosicion') populateMisTurnosPosSelect('Crew'); // Crew
+      if(screenId==='historialPosicion') renderHistorialPosicion(); // Entrenador
+    }
+
+    // Simula login (sin seguridad) - actualiza UI y menus
+    function doLogin(){
+      const user = document.getElementById('loginUsuario').value.trim().toLowerCase();
+      const pass = document.getElementById('loginPass').value.trim();
+      const rol = document.getElementById('loginRol').value;
+      
+      const foundUser = allUsers.find(u => u.user === user && u.pass === pass && u.role === rol);
+
+      if(!foundUser) {
+          alert('Credenciales incorrectas o Rol no coincide. Pruebe "admin", "rrhh", "gerente", "entrenador", "crew" con contraseña "1234".');
+          return;
+      }
+      
+      currentUser = foundUser;
+      document.getElementById('userName').innerText = foundUser.name + ' (' + ROLES[foundUser.role] + ')';
+      nav('home');
+    }
+
+    function logout(){
+      if(!confirm('Cerrar sesión?')) return;
+      currentUser = null;
+      document.getElementById('userName').innerText = '(no has iniciado sesión)';
+      document.getElementById('headerRole').innerText = 'Rol: Invitado';
+      nav('login');
+    }
+
+    /* ---------- FUNCIONES ADMIN (Gestion de Usuarios) ---------- */
+    function renderTablaUsuarios() {
+        const tbody = document.querySelector('#tableUsuarios tbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        
+        const filtro = document.getElementById('filtroUsuarios').value.toLowerCase();
+        
+        allUsers.filter(u => 
+            u.name.toLowerCase().includes(filtro) || 
+            ROLES[u.role].toLowerCase().includes(filtro)
+        ).forEach((u) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${u.name}</td><td>${ROLES[u.role]}</td><td>${u.user}</td><td>-</td><td class="actions">
+                <button class='btn btn-sec' onclick='toggleForm("formCrearUsuario")'>Editar</button>
+                <button class='btn btn-primary' onclick='eliminarUsuario("${u.user}")'>Eliminar</button>
+            </td>`;
+            tbody.appendChild(tr);
+        });
+    }
+    function eliminarUsuario(user) {
+        if (confirm(`¿Eliminar usuario ${user}? (Simulado)`)) {
+            allUsers = allUsers.filter(u => u.user !== user);
+            renderTablaUsuarios();
+        }
+    }
+
+    /* ---------- FUNCIONES RRHH (Creación de Malla) ---------- */
+    
+    // Función para obtener las fechas de la semana seleccionada
+    function getDatesOfWeek(startDateString) {
+      const dates = [];
+      const currentDate = new Date(startDateString);
+      // Asegurar que la fecha sea la correcta ajustando la zona horaria
+      currentDate.setHours(currentDate.getHours() + currentDate.getTimezoneOffset() / 60);
+
+      for (let i = 0; i < 7; i++) {
+          const date = new Date(currentDate);
+          date.setDate(currentDate.getDate() + i);
+          
+          const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+          const day = date.getDay(); // 0 (Domingo) a 6 (Sábado)
+
+          // Formato YYYY-MM-DD
+          const yyyy = date.getFullYear();
+          const mm = String(date.getMonth() + 1).padStart(2, '0');
+          const dd = String(date.getDate()).padStart(2, '0');
+          const dateString = `${yyyy}-${mm}-${dd}`;
+          
+          dates.push({
+              date: dateString,
+              dayName: dayNames[day],
+              display: `${dayNames[day]} ${dd}/${mm}`
+          });
+      }
+      return dates;
+    }
+
+    // Inicializa los selects del formulario de RR.HH.
+    function setupRRHHForm(weekDates) {
+        const selectEmpleado = document.getElementById('rrhhEmpleadoTurno');
+        const selectDia = document.getElementById('rrhhDiaTurno');
+        
+        // Empleados (solo Crew y Entrenador pueden tener turnos operativos)
+        selectEmpleado.innerHTML = allUsers
+            .filter(u => u.role === 'crew' || u.role === 'entrenador')
+            .map(u => `<option value="${u.name}|${u.role}">${u.name} (${ROLES[u.role]})</option>`)
+            .join('');
+
+        // Días de la semana
+        selectDia.innerHTML = weekDates
+            .map(d => `<option value="${d.date}">${d.display}</option>`)
+            .join('');
+    }
+    
+    // Renderiza la tabla de malla para RR.HH. (Turnos)
+    function renderMallaRRHH() {
+        const inicioSemana = document.getElementById('rrhhSemanaInicio').value;
+        const weekDates = getDatesOfWeek(inicioSemana);
+        document.getElementById('rrhhSemanaFin').value = weekDates[6].date; // Actualiza Fin de Semana
+        
+        setupRRHHForm(weekDates);
+
+        const container = document.getElementById('rrhhMallaContainer');
+        
+        // 1. Crear el encabezado de la tabla
+        let tableHTML = `<table style="font-size: 13px;"><thead><tr><th>Empleado</th>`;
+        weekDates.forEach(d => {
+            tableHTML += `<th>${d.display}</th>`;
+        });
+        tableHTML += `</tr></thead><tbody>`;
+
+        // 2. Agrupar turnos por empleado
+        const turnosPorEmpleado = planillaPublicada.reduce((acc, t) => {
+            if (!acc[t.empleado]) acc[t.empleado] = {};
+            acc[t.empleado][t.fecha] = t;
+            return acc;
+        }, {});
+        
+        // 3. Obtener solo empleados con turnos operativos (Crew y Entrenador)
+        const empleadosOperativos = allUsers.filter(u => u.role === 'crew' || u.role === 'entrenador');
+
+        // 4. Llenar la tabla
+        empleadosOperativos.forEach(u => {
+            tableHTML += `<tr><td>${u.name} (${ROLES[u.role]})</td>`;
+            weekDates.forEach(d => {
+                const turno = turnosPorEmpleado[u.name] ? turnosPorEmpleado[u.name][d.date] : null;
+                if (turno) {
+                    const turnoId = `${turno.id}`;
+                    tableHTML += `<td><div class="turno-box" onclick="abrirFormEditarTurno('${turnoId}')">${turno.inicio} - ${turno.fin}</div></td>`;
+                } else {
+                    // Botón para crear nuevo turno
+                    tableHTML += `<td><button class='btn' style='padding:5px; font-size:11px;' onclick="abrirFormCrearTurno('${u.name}|${u.role}', '${d.date}')">Asignar</button></td>`;
+                }
+            });
+            tableHTML += `</tr>`;
+        });
+        
+        tableHTML += `</tbody></table>`;
+        container.innerHTML = tableHTML;
+    }
+
+    // Abre el formulario para crear un nuevo turno (pre-rellena empleado y día)
+    function abrirFormCrearTurno(empleadoValor, diaFecha) {
+        document.getElementById('rrhhTurnoId').value = '';
+        document.getElementById('rrhhEmpleadoTurno').value = empleadoValor;
+        document.getElementById('rrhhDiaTurno').value = diaFecha;
+        document.getElementById('rrhhHoraInicio').value = '';
+        document.getElementById('rrhhHoraFin').value = '';
+        document.querySelector('#formAgregarTurnoRRHH h3').innerText = 'Agregar Turno';
+        toggleForm('formAgregarTurnoRRHH');
+    }
+
+    // Abre el formulario para editar un turno existente
+    function abrirFormEditarTurno(turnoId) {
+        const turno = planillaPublicada.find(t => t.id == turnoId);
+        if (!turno) return alert('Turno no encontrado.');
+
+        document.getElementById('rrhhTurnoId').value = turnoId;
+        document.getElementById('rrhhEmpleadoTurno').value = `${turno.empleado}|${turno.cargo.toLowerCase()}`;
+        document.getElementById('rrhhDiaTurno').value = turno.fecha;
+        document.getElementById('rrhhHoraInicio').value = turno.inicio;
+        document.getElementById('rrhhHoraFin').value = turno.fin;
+        document.querySelector('#formAgregarTurnoRRHH h3').innerText = 'Editar Turno';
+        toggleForm('formAgregarTurnoRRHH');
+    }
+
+    // Guarda o actualiza un turno en la planilla (RR.HH.)
+    function guardarTurnoRRHH() {
+        const id = document.getElementById('rrhhTurnoId').value;
+        const [empleado, cargo] = document.getElementById('rrhhEmpleadoTurno').value.split('|');
+        const fecha = document.getElementById('rrhhDiaTurno').value;
+        const inicio = document.getElementById('rrhhHoraInicio').value;
+        const fin = document.getElementById('rrhhHoraFin').value;
+        
+        if (id) {
+            // Editar
+            const index = planillaPublicada.findIndex(t => t.id == id);
+            if (index !== -1) {
+                planillaPublicada[index].fecha = fecha;
+                planillaPublicada[index].inicio = inicio;
+                planillaPublicada[index].fin = fin;
+                planillaPublicada[index].empleado = empleado;
+                // No se actualiza el cargo, se asume que el empleado mantiene su rol.
+                alert('Turno actualizado con éxito (simulado)');
+            }
+        } else {
+            // Crear
+            const nuevoTurno = {
+                id: Date.now(),
+                empleado,
+                fecha,
+                inicio,
+                fin,
+                cargo: ROLES[cargo],
+                posicion: null // Posición pendiente de Gerente
+            };
+            planillaPublicada.push(nuevoTurno);
+            alert('Nuevo turno agregado con éxito (simulado)');
+        }
+        
+        toggleForm('formAgregarTurnoRRHH');
+        renderMallaRRHH();
+    }
+
+
+    /* ---------- FUNCIONES MALLA / PLANILLA (Compartidas) ---------- */
+    
+    // Carga demo de planilla para que Gerente y Crew tengan datos
+    function seedDemo(){
+        // Reset de Planilla para IDs consistentes en el demo
+        planillaPublicada = [
+            // Crew Constanza
+            { id: 101, empleado:'Crew Constanza', fecha:'2025-10-28', inicio:'08:00', fin:'13:00', cargo:'Crew', posicion:'Caja'},
+            { id: 102, empleado:'Crew Constanza', fecha:'2025-10-29', inicio:'15:00', fin:'20:00', cargo:'Crew', posicion:'Cocina'},
+            // Crew Felipe
+            { id: 103, empleado:'Crew Felipe', fecha:'2025-10-28', inicio:'10:00', fin:'18:00', cargo:'Crew', posicion:'Cocina'},
+            { id: 104, empleado:'Crew Felipe', fecha:'2025-10-31', inicio:'07:00', fin:'14:00', cargo:'Crew', posicion:null}, // Sin posicion para demostrar asignación
+            // Entrenador Juan
+            { id: 105, empleado:'Entrenador Juan', fecha:'2025-10-28', inicio:'09:00', fin:'17:00', cargo:'Entrenador', posicion:'Sala'},
+            { id: 106, empleado:'Entrenador Juan', fecha:'2025-10-30', inicio:'10:00', fin:'18:00', cargo:'Entrenador', posicion:'Automac'},
+            // Gerente Jefe (No debería aparecer en planificaciones operativas)
+            { id: 107, empleado:'Gerente Jefe', fecha:'2025-10-28', inicio:'07:00', fin:'15:00', cargo:'Gerente', posicion:'Oficina'},
+        ];
+        
+        // Reset de Solicitudes
+        solicitudes = [
+            // Solicitud de Turno (Crew -> RRHH)
+            { id: 1, tipo: 'Turno', empleado: 'Crew Constanza', turnoOriginalId: 102, turnoOriginal: '2025-10-29 15:00-20:00', turnoPedido: '2025-10-29 08:00-13:00', motivo: 'Cita médica', estado: 'Pendiente', fechaSolicitud: new Date().toLocaleString() },
+            // Solicitud de Posición (Entrenador -> Gerente)
+            { id: 2, tipo: 'PosicionEntrenador', empleado: 'Entrenador Juan', turnoOriginalId: 105, turnoOriginal: '2025-10-28 09:00-17:00', posicionOriginal: 'Sala', posicionPedida: 'Cocina', motivo: 'Necesito práctica en Cocina', estado: 'Pendiente', fechaSolicitud: new Date().toLocaleString() },
+            // Solicitud de Posición (Crew -> Entrenador)
+            { id: 3, tipo: 'PosicionCrew', empleado: 'Crew Constanza', turnoOriginalId: 101, turnoOriginal: '2025-10-28 08:00-13:00', posicionOriginal: 'Caja', posicionPedida: 'Automac', motivo: 'Más cómodo en Automac', estado: 'Pendiente', fechaSolicitud: new Date().toLocaleString() },
+        ];
+        
+        alert('Demo cargado con planilla y 3 solicitudes pendientes.');
+        document.getElementById('homePlanillaInfo').innerText = planillaPublicada.length + ' turnos publicados';
+        document.getElementById('homeSolicitudesInfo').innerText = solicitudes.filter(s=>s.estado==='Pendiente').length;
+    }
+    
+    // Renderiza planilla completa (Gerente/Entrenador)
+    function renderMallaPublicada(){
+        const tbody = document.querySelector('#tableMallaVisualizacion tbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        
+        const filtro = document.getElementById('filtroMallaVisualizacion').value.toLowerCase();
+        
+        planillaPublicada.filter(t => 
+            t.empleado.toLowerCase().includes(filtro) || 
+            (t.posicion && t.posicion.toLowerCase().includes(filtro)) ||
+            t.fecha.includes(filtro)
+        ).forEach(t=>{
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${t.empleado}</td><td>${t.fecha}</td><td>${t.inicio}</td><td>${t.fin}</td><td>${t.cargo}</td><td>${t.posicion || 'SIN POSICIÓN'}</td>`;
+            tbody.appendChild(tr);
+        });
+    }
+
+    /* ---------- FUNCIONES GERENTE (Planif. Posiciones) ---------- */
+    
+    // Renderiza la planilla para la planificación de posiciones (Gerente)
+    function renderPlanifPosiciones(){
+        const tbody = document.querySelector('#tablePlanifPosiciones tbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        
+        const filtro = document.getElementById('filtroPlanifPosiciones').value.toLowerCase();
+        
+        planillaPublicada.filter(t => (t.cargo === 'Crew' || t.cargo === 'Entrenador') && (
+            t.empleado.toLowerCase().includes(filtro) ||
+            (t.posicion && t.posicion.toLowerCase().includes(filtro)) ||
+            t.fecha.includes(filtro)
+        )).forEach(t=>{
+            const tr = document.createElement('tr');
+            const posicionDisplay = t.posicion || 'PENDIENTE';
+            tr.innerHTML = `<td>${t.empleado}</td><td>${t.fecha}</td><td>${t.inicio} - ${t.fin}</td><td>**${posicionDisplay}**</td><td class='actions'>
+                <button class='btn btn-sec' onclick='asignarPosicion(${t.id}, "${t.empleado}", "${t.fecha}")'>Asignar/Editar Posición</button>
+                <button class='btn' onclick='eliminarPosicion(${t.id})'>Eliminar</button>
+            </td>`;
+            tbody.appendChild(tr);
+        });
+    }
+    
+    // Asigna/Edita posición (Gerente) - Actualiza el valor real
+    function asignarPosicion(id, empleado, fecha){
+        const turnoIndex = planillaPublicada.findIndex(t => t.id === id);
+        if (turnoIndex === -1) return alert('Turno no encontrado.');
+        
+        const currentPosicion = planillaPublicada[turnoIndex].posicion || '';
+        
+        const newPosicion = prompt(`Nueva posición para ${empleado} (${fecha}, Turno ${planillaPublicada[turnoIndex].inicio}-${planillaPublicada[turnoIndex].fin}):`, currentPosicion);
+
+        if (newPosicion === null || newPosicion.trim() === '') {
+            // Cancelado o vacío, no hacer nada
+            if (newPosicion !== null && currentPosicion) {
+                // Si el usuario borra la posición existente
+                planillaPublicada[turnoIndex].posicion = null;
+                alert('Posición eliminada/reseteada.');
+                renderPlanifPosiciones();
+            }
+            return;
+        }
+
+        // Actualizar la posición
+        planillaPublicada[turnoIndex].posicion = newPosicion.trim();
+        alert(`Posición actualizada a **${newPosicion.trim()}** para ${empleado}.`);
+        renderPlanifPosiciones();
+        document.getElementById('homePlanillaInfo').innerText = planillaPublicada.length + ' turnos publicados (posiciones actualizadas)';
+    }
+
+    // Elimina posición (Gerente) - Pone el valor en null
+    function eliminarPosicion(id){
+        const turnoIndex = planillaPublicada.findIndex(t => t.id === id);
+        if (turnoIndex === -1) return alert('Turno no encontrado.');
+        
+        if (confirm(`¿Eliminar la posición de ${planillaPublicada[turnoIndex].empleado} para el turno ${planillaPublicada[turnoIndex].fecha} ${planillaPublicada[turnoIndex].inicio}-${planillaPublicada[turnoIndex].fin}?`)) {
+            planillaPublicada[turnoIndex].posicion = null;
+            alert('Posición eliminada.');
+            renderPlanifPosiciones();
+        }
+    }
+
+
+    // Renderiza planilla personal (Crew)
+    function renderMiPlanilla(){
+      const tbody = document.querySelector('#tableMiPlanilla tbody');
+      tbody.innerHTML = '';
+      if(!currentUser) return;
+      
+      const filtro = document.getElementById('filtroMiPlanilla').value.toLowerCase();
+        
+      const mis = planillaPublicada.filter(t => t.empleado.toLowerCase() === currentUser.name.toLowerCase() && t.fecha.includes(filtro));
+
+      mis.forEach(t=>{
+        const tr = document.createElement('tr');
+        // Usamos el ID del turno para la acción
+        tr.innerHTML = `<td>${t.fecha}</td><td>${t.inicio}</td><td>${t.fin}</td><td>**${t.posicion || 'N/A'}**</td><td><button class='btn btn-sec' onclick="prepararSolicitudCambioTurno(${t.id})">Solicitar cambio de Turno</button></td>`;
+        tbody.appendChild(tr);
+      })
+    }
+    
+    // Abre el formulario de solicitud de turno y precarga la info
+    function prepararSolicitudCambioTurno(turnoId) {
+        const turno = planillaPublicada.find(t => t.id === turnoId);
+        if (!turno) return alert('Turno no encontrado.');
+
+        // Rellenar la información del turno a cambiar
+        document.getElementById('turnoIdACambiar').value = turnoId;
+        document.getElementById('turnoOriginalInfo').innerText = `${turno.fecha} ${turno.inicio}-${turno.fin} (Posición: ${turno.posicion || 'N/A'})`;
+        
+        // Resetear el resto del formulario
+        document.getElementById('sugFecha').value = '';
+        document.getElementById('sugInicio').value = '';
+        document.getElementById('sugFin').value = '';
+        document.getElementById('motivoCambio').value = '';
+        
+        // Mostrar el formulario
+        document.getElementById('solicitarCambioTurnoForm').style.display = 'block';
+    }
+
+
+    /* ---------- FUNCIONES SOLICITUDES (Crew/Entrenador -> RR.HH./Gerente/Entrenador) ---------- */
+    
+    // Llena el select de turnos disponibles para cambio de POSICIÓN (Crew)
+    function populateMisTurnosPosSelect(targetRole){
+      const sel = document.getElementById('selectMisTurnosPos');
+      sel.innerHTML = '';
+      if(!currentUser) return;
+      
+      // Crew solo puede cambiar sus turnos de Crew
+      const mis = planillaPublicada.filter(t=>t.empleado.toLowerCase() === currentUser.name.toLowerCase() && t.cargo === targetRole);
+      
+      if(mis.length===0){
+        const opt = document.createElement('option'); opt.text=`(No tienes turnos como ${targetRole})`; opt.value=''; sel.appendChild(opt); return;
+      }
+      // El valor de la opción es el ID del turno
+      mis.forEach((t,i)=>{
+        const opt = document.createElement('option');
+        opt.value = t.id; opt.text = `${t.fecha} - ${t.inicio} a ${t.fin} (${t.posicion || 'SIN POSICIÓN'})`;
+        sel.appendChild(opt);
+      })
+    }
+    
+    // Llena el select de TODOS los turnos para cambio de POSICIÓN (Entrenador)
+    function populateTurnosAllSelect(){
+      const sel = document.getElementById('selectTodosLosTurnos');
+      sel.innerHTML = '';
+      
+      // Entrenador puede cambiar la posición de CUALQUIER turno operativo (Crew/Entrenador)
+      const todosOperativos = planillaPublicada.filter(t => t.cargo === 'Crew' || t.cargo === 'Entrenador');
+      
+      if(todosOperativos.length===0){
+        const opt = document.createElement('option'); opt.text='(No hay turnos operativos publicados)'; opt.value=''; sel.appendChild(opt); return;
+      }
+      
+      todosOperativos.forEach(t=>{
+        const opt = document.createElement('option');
+        opt.value = t.id; opt.text = `${t.empleado} (${t.cargo}) - ${t.fecha} ${t.inicio}-${t.fin} (Posición: ${t.posicion || 'N/A'})`;
+        sel.appendChild(opt);
+      })
+    }
+
+    // Enviar solicitud de Turno (Crew)
+    function enviarSolicitudTurno() {
+        if(!currentUser) return alert('Debes iniciar sesión.');
+
+        const turnoId = document.getElementById('turnoIdACambiar').value;
+        const turnoOriginal = planillaPublicada.find(t => t.id == turnoId);
+        if(!turnoOriginal) return alert('Turno original no válido.');
+
+        const sugFecha = document.getElementById('sugFecha').value;
+        const sugInicio = document.getElementById('sugInicio').value;
+        const sugFin = document.getElementById('sugFin').value;
+        const motivo = document.getElementById('motivoCambio').value.trim();
+        
+        if(!sugFecha||!sugInicio||!sugFin||!motivo) return alert('Completa todos los campos de la solicitud de Turno.');
+        
+        let solicitud = { 
+            id: Date.now(), 
+            empleado: currentUser.name, 
+            tipo: 'Turno', 
+            estado: 'Pendiente', 
+            fechaSolicitud: new Date().toLocaleString(), 
+            turnoOriginalId: turnoOriginal.id,
+            turnoOriginal: `${turnoOriginal.fecha} ${turnoOriginal.inicio}-${turnoOriginal.fin}`,
+            turnoPedido: `${sugFecha} ${sugInicio}-${sugFin}`,
+            motivo: motivo
+        };
+        
+        solicitudes.push(solicitud);
+        document.getElementById('solicitarCambioTurnoForm').querySelector('form').reset();
+        document.getElementById('solicitarCambioTurnoForm').style.display = 'none';
+        
+        document.getElementById('homeSolicitudesInfo').innerText = solicitudes.filter(s=>s.estado==='Pendiente').length;
+        alert(`Solicitud de Turno enviada con éxito a RR.HH. (simulado)`);
+        nav('home');
+    }
+    
+    // Enviar solicitud de Posicion (Crew o Entrenador)
+    function enviarSolicitud(tipo) {
+        if (tipo === 'Turno') return enviarSolicitudTurno(); // Usa la función nueva
+
+        if(!currentUser) return alert('Debes iniciar sesión.');
+
+        const sel = document.getElementById('selectMisTurnosPos');
+        if(!sel.value) return alert('Selecciona un turno válido para el cambio.');
+
+        const turnoOriginal = planillaPublicada.find(t => t.id == parseInt(sel.value));
+        
+        const posicionPedida = document.getElementById('posicionPedida').value.trim();
+        const motivo = document.getElementById('motivoCambioPos').value.trim();
+        
+        if(!posicionPedida||!motivo) return alert('Completa todos los campos de la solicitud de Posición.');
+
+        let solicitud = { 
+            id: Date.now(), 
+            empleado: currentUser.name, 
+            tipo, 
+            estado: 'Pendiente', 
+            fechaSolicitud: new Date().toLocaleString(), 
+            turnoOriginalId: turnoOriginal.id,
+            turnoOriginal: `${turnoOriginal.fecha} ${turnoOriginal.inicio}-${turnoOriginal.fin}`,
+            posicionOriginal: turnoOriginal.posicion,
+            posicionPedida,
+            motivo
+        };
+
+        solicitudes.push(solicitud);
+        document.getElementById('solicitarCambioPosicion').querySelector('form').reset();
+        
+        document.getElementById('homeSolicitudesInfo').innerText = solicitudes.filter(s=>s.estado==='Pendiente').length;
+        alert(`Solicitud de Posición enviada con éxito (simulado)`);
+        nav('home');
+    }
+    
+    // Enviar solicitud de Posicion (Entrenador - Todos los turnos)
+    function enviarSolicitudEntrenadorPosicionAll() {
+        if(!currentUser) return alert('Debes iniciar sesión.');
+        
+        const sel = document.getElementById('selectTodosLosTurnos');
+        if(!sel.value) return alert('Selecciona un turno válido para el cambio.');
+
+        const turnoOriginal = planillaPublicada.find(t => t.id == parseInt(sel.value));
+        
+        const posicionPedida = document.getElementById('posicionPedidaAll').value.trim();
+        const motivo = document.getElementById('motivoCambioPosAll').value.trim();
+        
+        if(!posicionPedida||!motivo) return alert('Completa todos los campos de la solicitud de Posición.');
+
+        let solicitud = { 
+            id: Date.now(), 
+            empleado: currentUser.name, 
+            tipo: 'PosicionEntrenador', // Tipo para que lo revise el Gerente
+            estado: 'Pendiente', 
+            fechaSolicitud: new Date().toLocaleString(), 
+            turnoOriginalId: turnoOriginal.id,
+            turnoOriginal: `${turnoOriginal.fecha} ${turnoOriginal.inicio}-${turnoOriginal.fin}`,
+            posicionOriginal: turnoOriginal.posicion,
+            posicionPedida,
+            motivo,
+            empleadoAfectado: turnoOriginal.empleado // Nuevo campo para saber quién es el dueño del turno
+        };
+
+        solicitudes.push(solicitud);
+        document.getElementById('solicitarCambioPosicionAll').querySelector('form').reset();
+        
+        document.getElementById('homeSolicitudesInfo').innerText = solicitudes.filter(s=>s.estado==='Pendiente').length;
+        alert(`Solicitud de Posición (Global) enviada con éxito al Gerente (simulado)`);
+        nav('home');
+    }
+
+    // Renderiza solicitudes para RR.HH. (Turno), Gerente (PosicionEntrenador) o Entrenador (PosicionCrew)
+    function renderSolicitudes(tipo){
+      let tbodyId;
+      if (tipo === 'Turno') tbodyId = '#tableSolicitudesTurno tbody';
+      else if (tipo === 'PosicionEntrenador') tbodyId = '#tableSolicitudesPosicion tbody';
+      else if (tipo === 'PosicionCrew') tbodyId = '#tableSolicitudesPosicionCrew tbody';
+      else return;
+      
+      const tbody = document.querySelector(tbodyId);
+      if (!tbody) return;
+      tbody.innerHTML = '';
+      
+      const filteredSolicitudes = solicitudes.filter(s => s.tipo === tipo);
+
+      filteredSolicitudes.forEach(s=>{
+        const tr = document.createElement('tr');
+        
+        let empleadoCol = s.empleado;
+        let detalles;
+        
+        if (tipo === 'Turno') {
+          detalles = `<td>${s.turnoOriginal}</td><td>${s.turnoPedido}</td><td>${s.motivo}</td>`;
+        } else { // PosicionEntrenador, PosicionCrew
+          // Si es Entrenador pidiendo por otro, mostrar quién es el afectado
+          if (tipo === 'PosicionEntrenador' && s.empleado !== s.empleadoAfectado) {
+             empleadoCol = `${s.empleado} (Para: ${s.empleadoAfectado})`;
+          }
+          detalles = `<td>${s.turnoOriginal}</td><td>${s.posicionOriginal || 'N/A'}</td><td>${s.posicionPedida}</td><td>${s.motivo}</td>`;
+        }
+        
+        // Columna de Empleado
+        tr.innerHTML = `<td>${empleadoCol}</td>${detalles}<td><span class="estado-${s.estado.toLowerCase()}">${s.estado}</span></td><td class='actions'>
+          ${s.estado === 'Pendiente' ? 
+            `<button class='btn btn-approve' onclick='aprobarSolicitud(${s.id}, "${tipo}")'>Aprobar</button>
+            <button class='btn btn-reject' onclick='rechazarSolicitud(${s.id}, "${tipo}")'>Rechazar</button>` 
+            : s.estado}
+        </td>`;
+        tbody.appendChild(tr);
+      })
+    }
+
+    // Lógica para APROBAR solicitud (Simulada, no actualiza planilla)
+    function aprobarSolicitud(id, tipo){
+      const s = solicitudes.find(x=>x.id===id); if(!s) return;
+      
+      // En un sistema real, aquí se actualizaría la planilla Publicada.
+      if(!confirm(`¿Aprobar solicitud de ${tipo}? (Simulado - NOTA: La planilla no se actualiza en este mockup)`)) return;
+      
+      s.estado = 'Aprobado';
+      renderSolicitudes(tipo);
+      document.getElementById('homeSolicitudesInfo').innerText = solicitudes.filter(s=>s.estado==='Pendiente').length;
+    }
+    
+    // Lógica para RECHAZAR solicitud
+    function rechazarSolicitud(id, tipo){
+      const s = solicitudes.find(x=>x.id===id); if(!s) return;
+      if(!confirm(`¿Rechazar solicitud de ${tipo}?`)) return;
+      s.estado = 'Rechazado';
+      renderSolicitudes(tipo);
+      document.getElementById('homeSolicitudesInfo').innerText = solicitudes.filter(s=>s.estado==='Pendiente').length;
+    }
+
+    // Renderiza el estado de las solicitudes para el Crew/Entrenador
+    function renderEstadoSolicitudes(){
+        const tbody = document.querySelector('#tableEstadoSolicitudes tbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        const mine = currentUser ? solicitudes.filter(s=>s.empleado.toLowerCase()===currentUser.name.toLowerCase()) : [];
+        
+        mine.forEach(s=>{
+            let detalle;
+            if (s.tipo === 'Turno') {
+                detalle = `<td>${s.turnoOriginal}</td><td>Turno: ${s.turnoPedido}</td>`;
+            } else { // PosicionEntrenador, PosicionCrew
+                detalle = `<td>${s.turnoOriginal} (Pos. Org: ${s.posicionOriginal || 'N/A'})</td><td>Posición: ${s.posicionPedida}</td>`;
+            }
+            
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${s.tipo.replace('Posicion', 'Pos.')}</td>${detalle}<td><span class="estado-${s.estado.toLowerCase()}">${s.estado}</span></td>`;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // Renderiza el historial de turnos (Crew)
+    function renderHistorial(){
+        const tbody = document.querySelector('#tableHistorial tbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        
+        const filtro = document.getElementById('filtroHistorial').value.toLowerCase();
+
+        // En un sistema real, sería una vista filtrada por fecha. Aquí usamos la planilla actual.
+        const misTurnosHist = planillaPublicada.filter(t=>t.empleado.toLowerCase()===currentUser.name.toLowerCase() && t.fecha.includes(filtro));
+
+        misTurnosHist.forEach(t=>{
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${t.fecha}</td><td>${t.inicio}</td><td>${t.fin}</td><td>**${t.posicion || 'N/A'}**</td>`;
+            tbody.appendChild(tr);
+        });
+    }
+    
+    // Renderiza el historial de solicitudes de posición (Entrenador)
+    function renderHistorialPosicion() {
+        const tbody = document.querySelector('#tableHistorialPosicion tbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        const mine = currentUser ? solicitudes.filter(s => s.tipo === 'PosicionEntrenador' && s.empleado.toLowerCase() === currentUser.name.toLowerCase()) : [];
+
+        mine.forEach(s => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${s.fechaSolicitud}</td><td>${s.turnoOriginal}</td><td>${s.posicionPedida}</td><td><span class="estado-${s.estado.toLowerCase()}">${s.estado}</span></td>`;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // Al iniciar, mostrar login
+    nav('login');
+  </script>
+</body>
+</html>
