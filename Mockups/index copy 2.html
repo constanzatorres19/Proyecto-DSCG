@@ -155,6 +155,14 @@
     .turno-box.pendiente { border: 2px dashed #f0ad4e; } /* Para turnos nuevos o editados */
     .turno-libre { background: #aaa; color: #fff; padding: 5px; border-radius: 5px; font-size: 12px; text-align: center; margin-bottom: 5px; }
 
+    /* Estilos para KPIs */
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-top: 20px; }
+    .kpi-card { padding: 15px; border-radius: 12px; background: var(--mc-light); border: 1px solid #ddd; }
+    .kpi-value { font-size: 32px; font-weight: bold; margin: 5px 0; }
+    .kpi-status { padding: 5px 10px; border-radius: 8px; font-weight: bold; display: inline-block; margin-top: 10px; font-size: 14px; }
+    .kpi-status.expected { background: #f0ad4e; color: #333; }
+    .kpi-status.better { background: #4CAF50; color: white; }
+    .kpi-status.deficient { background: var(--mc-red); color: white; }
 
     /* Responsivo */
     @media(max-width:900px){
@@ -207,8 +215,8 @@
             
             <div id="menuEntrenador" style="display:none">
               <button class="btn btn-sec" onclick="nav('visualizarMalla')">Malla con Posiciones</button>
-              <button class="btn btn-sec" onclick="nav('solicitarCambioPosicionAll')">Solicitar Cambio de Posición (Todos)</button>
               <button class="btn btn-sec" onclick="nav('misTurnosYCambioEntrenador')">Mis Turnos y Solicitud de Cambio</button>
+              <button class="btn btn-sec" onclick="nav('solicitarCambioPosicionAll')">Solicitar Cambio de Posición (Todos)</button>
               <button class="btn btn-sec" onclick="nav('historialPosicion')">Estado de Solicitudes (Mías)</button>
             </div>
             
@@ -313,8 +321,12 @@
           
           <section id="kpisRRHH" class="screen">
             <h2>Panel de Indicadores Clave (RR.HH.)</h2>
-            <p class="muted">Aquí se mostrarán los principales KPIs de planificación y dotación (Pendiente de implementación).</p>
-            </section>
+            <p class="muted">Indicadores basados en la planificación **Mensual** para el periodo: ${mallaMetadata.startDate} - ${mallaMetadata.endDate} (Publicada: ${mallaMetadata.publicationDate}).</p>
+            
+            <div id="kpisContainer" class="kpi-grid">
+                </div>
+
+          </section>
           <section id="planificarRRHH" class="screen">
             <h2>Creación de Malla Horaria Semanal (Gerente)</h2>
             <p class="muted">Planifique los turnos por empleado. Usted (Gerente) puede añadir las posiciones después.</p>
@@ -384,7 +396,7 @@
             <h2>Solicitudes de Cambio de Turno Pendientes (Gerente)</h2>
             <p class="muted">Revisa y aprueba/rechaza los cambios solicitados por el Crew.</p>
             <table id="tableSolicitudesTurno">
-              <thead><tr><th>Empleado</th><th>Fecha Solicitud</th><th>Turno original</th><th>Turno pedido</th><th>Motivo</th><th>Estado</th><th>Acciones</th></tr></thead>
+              <thead><tr><th>Empleado</th><th>Fecha Solicitud</th><th>Semana Original</th><th>Turno original</th><th>Turno pedido</th><th>Motivo</th><th>Estado</th><th>Acciones</th></tr></thead>
               <tbody>
                 </tbody>
             </table>
@@ -559,17 +571,24 @@
         { name: 'Ricardo RRHH', role: 'rrhh', user: 'rrhh', pass: '1234' },
         { name: 'Gerente Jefe', role: 'gerente', user: 'gerente', pass: '1234' },
         { name: 'Entrenador Juan', role: 'entrenador', user: 'entrenador', pass: '1234' },
+        { name: 'Entrenador Sofi', role: 'entrenador', user: 'sofi', pass: '1234' }, 
+        { name: 'Entrenador Luis', role: 'entrenador', user: 'luis', pass: '1234' }, 
         { name: 'Crew Constanza', role: 'crew', user: 'crew', pass: '1234' },
-        { name: 'Crew Felipe', role: 'crew', user: 'felipe', pass: '1234' }, // Para demo de Entrenador
+        { name: 'Crew Felipe', role: 'crew', user: 'felipe', pass: '1234' },
+        { name: 'Crew Andrea', role: 'crew', user: 'andrea', pass: '1234' }, 
+        { name: 'Crew Daniel', role: 'crew', user: 'daniel', pass: '1234' }, 
+        { name: 'Crew Emilia', role: 'crew', user: 'emilia', pass: '1234' }, 
+        { name: 'Crew Gaston', role: 'crew', user: 'gaston', pass: '1234' }, 
+        { name: 'Crew Jose', role: 'crew', user: 'jose', pass: '1234' }, 
     ];
 
     let planillaPublicada = []; // Malla con Turnos + Posiciones
 
     // NEW: Malla Metadata for visualization
     let mallaMetadata = {
-        startDate: '2025-10-28',
-        endDate: '2025-11-03',
-        publicationDate: new Date('2025-10-26T10:00:00').toLocaleString() // Simulating publication 2 days before
+        startDate: '2025-10-27', // Lunes 27 de Octubre
+        endDate: '2025-11-23', // Domingo 23 de Noviembre (4 semanas)
+        publicationDate: new Date('2025-10-24T10:00:00').toLocaleString() // Viernes 24 de Octubre (Publicado 3 días antes)
     };
     
     let solicitudes = []; // Todas las solicitudes (Turno, PosicionEntrenador, PosicionCrew)
@@ -590,6 +609,34 @@
         const el = document.getElementById(id);
         el.style.display = el.style.display === 'none' ? 'block' : 'none';
     }
+
+    // NEW UTILITY: Calculates the start and end date of the week for a given date.
+    function getWeekInfoByDate(dateString) {
+        const date = new Date(dateString + 'T00:00:00'); // Use midnight UTC to avoid timezone issues
+        const dayOfWeek = (date.getDay() + 6) % 7; // Adjust Sunday (0) to be last (6), Monday (1) to be first (0)
+        
+        // Start date (Monday)
+        const start = new Date(date);
+        start.setDate(date.getDate() - dayOfWeek);
+
+        // End date (Sunday)
+        const end = new Date(start);
+        end.setDate(start.getDate() + 6);
+        
+        const formatDate = (d) => {
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        };
+
+        return {
+            start: formatDate(start),
+            end: formatDate(end),
+            display: `${formatDate(start)} al ${formatDate(end)}`
+        };
+    }
+
 
     /* ---------- FUNCIONES HOME/DASHBOARD ---------- */
     function updateHomeDashboard() {
@@ -644,6 +691,9 @@
       if(screenId==='miPlanilla') {
         renderMiPlanilla();
       }
+      // NEW KPI RENDER
+      if(screenId==='kpisRRHH') renderKpisRRHH();
+      
       if(screenId==='visualizarMalla') renderMallaPublicada();
       if(screenId==='planificarPosiciones') renderPlanifPosiciones();
       if(screenId==='revisarSolicitudesTurno') renderSolicitudes('Turno');
@@ -753,6 +803,127 @@
             allUsers = allUsers.filter(u => u.user !== user);
             renderTablaUsuarios();
         }
+    }
+
+    /* ---------- FUNCIONES RRHH (KPIs) ---------- */
+
+    function getKpiStatus(result, expected, isBetterHigher) {
+        if (result === null || isNaN(result)) return { status: 'Deficiente', className: 'deficient' };
+        
+        if (isBetterHigher) {
+            if (result > expected) return { status: 'Mejor de lo esperado', className: 'better' };
+            if (result === expected) return { status: 'Esperado', className: 'expected' };
+            return { status: 'Deficiente', className: 'deficient' };
+        } else { // Better is lower (or equal for threshold)
+            if (result < expected) return { status: 'Mejor de lo esperado', className: 'better' };
+            if (result === expected) return { status: 'Esperado', className: 'expected' };
+            return { status: 'Deficiente', className: 'deficient' };
+        }
+    }
+    
+    function renderKpisRRHH() {
+        const container = document.getElementById('kpisContainer');
+        if (!container) return;
+        container.innerHTML = '<h3>Cálculo de Indicadores...</h3>';
+
+        const operativos = allUsers.filter(u => u.role === 'crew' || u.role === 'entrenador');
+        const totalOperativos = operativos.length; // Total: 10
+        const totalDias = 28; // 4 semanas
+
+        // Filtrar solo turnos operativos y reales (no días libres)
+        const turnosOperativosReales = planillaPublicada.filter(t => 
+            (t.cargo === 'Crew' || t.cargo === 'Entrenador') && t.inicio !== 'Libre'
+        );
+        const totalTurnosPlanificados = turnosOperativosReales.length; // Total: 80
+        
+        // ------------------------- KPI 1: Tasa de carga personal (Mensual Promedio) -------------------------
+        const turnosPorClasificacion = turnosOperativosReales.reduce((acc, t) => {
+            acc[t.clasificacion] = (acc[t.clasificacion] || 0) + 1;
+            return acc;
+        }, {});
+        
+        // Asumiendo que los turnos están distribuidos en el mes, calculamos el promedio diario de turnos por clasificación
+        const kpi1 = [];
+        const clasificaciones = ['am', 'pm', 'nocturno'];
+        const expectedKpi1 = 8; // % de empleados por turno diario
+        
+        clasificaciones.forEach(c => {
+            const countMensual = turnosPorClasificacion[c] || 0;
+            const countPromedioDiario = countMensual / totalDias; // Promedio de empleados en ese turno por día
+            
+            // La fórmula original es: (n° de empleados por turno diario/n° de empleados (crew+entrenadores) ) *100
+            const tasa = totalOperativos > 0 ? (countPromedioDiario / totalOperativos) * 100 : 0;
+            const status = getKpiStatus(tasa, expectedKpi1, true); // Better is Higher ( > 8%)
+
+            kpi1.push(`
+                <div class="kpi-card">
+                    <h4>Tasa de Carga: ${c.toUpperCase()} (Prom. Mensual)</h4>
+                    <p class="muted">(${countMensual.toFixed(0)} turnos mensuales / ${totalDias} días) / ${totalOperativos} empleados) * 100</p>
+                    <div class="kpi-value">${tasa.toFixed(2)}%</div>
+                    <div class="kpi-status ${status.className}">
+                        ${status.status} (Esperado: ${expectedKpi1}%)
+                    </div>
+                </div>
+            `);
+        });
+
+        // ------------------------- KPI 2: Porcentaje modificaciones a turnos despues del plan semanal -------------------------
+        const pubDate = new Date(mallaMetadata.publicationDate); // Fecha de publicación del plan semanal.
+        
+        // Solicitudes de Turno resueltas (Aprobadas o Rechazadas)
+        const solicitudesTurnoResueltas = solicitudes.filter(s => 
+            s.tipo === 'Turno' && s.estado !== 'Pendiente'
+        );
+        
+        // Contamos las que se resolvieron *después* de la publicación del plan semanal.
+        const modificacionesDespuesPlan = solicitudesTurnoResueltas.filter(s => {
+            const fechaRespuesta = new Date(s.fechaRespuesta);
+            return fechaRespuesta > pubDate;
+        }).length; // Expected: 8
+        
+        const porcentajeModificaciones = totalTurnosPlanificados > 0 ? 
+                                         (modificacionesDespuesPlan / totalTurnosPlanificados) * 100 : 0; // Expected: (8 / 80) * 100 = 10.00%
+        const expectedKpi2 = 10;
+        // Lógica del usuario: mejor es mayor a 10%
+        const statusKpi2 = getKpiStatus(porcentajeModificaciones, expectedKpi2, true);
+
+        const kpi2 = `
+            <div class="kpi-card">
+                <h4>% Modificaciones Post-Plan</h4>
+                <p class="muted">(${modificacionesDespuesPlan} turnos modificados / ${totalTurnosPlanificados} turnos planificados) * 100</p>
+                <div class="kpi-value">${porcentajeModificaciones.toFixed(2)}%</div>
+                <div class="kpi-status ${statusKpi2.className}">
+                    ${statusKpi2.status} (Esperado: ${expectedKpi2}%)
+                </div>
+            </div>
+        `;
+        
+        // ------------------------- KPI 3: Tasa de revisión oportuna de solicitudes (Mensual) -------------------------
+        const solicitudesRelevantes = solicitudes.filter(s => s.tipo === 'Turno' || s.tipo === 'PosicionEntrenador');
+        const totalSolicitudesRecibidas = solicitudesRelevantes.length; // Expected: 15
+        
+        const revisadasDentroPlazo = solicitudesRelevantes.filter(s => 
+            s.estado !== 'Pendiente' && 
+            checkDeadlineStatus(s.fechaSolicitud, s.fechaRespuesta) === 'dentro del plazo'
+        ).length; // Expected: 12
+        
+        const tasaRevision = totalSolicitudesRecibidas > 0 ? 
+                             (revisadasDentroPlazo / totalSolicitudesRecibidas) * 100 : 0; // Expected: (12 / 15) * 100 = 80.00%
+        const expectedKpi3 = 95;
+        const statusKpi3 = getKpiStatus(tasaRevision, expectedKpi3, true); // Better is Higher ( > 95%)
+
+        const kpi3 = `
+            <div class="kpi-card">
+                <h4>Tasa de Revisión Oportuna (Solicitudes)</h4>
+                <p class="muted">(${revisadasDentroPlazo} solicitudes revisadas a tiempo / ${totalSolicitudesRecibidas} solicitudes recibidas) * 100</p>
+                <div class="kpi-value">${tasaRevision.toFixed(2)}%</div>
+                <div class="kpi-status ${statusKpi3.className}">
+                    ${statusKpi3.status} (Esperado: ${expectedKpi3}%)
+                </div>
+            </div>
+        `;
+
+        container.innerHTML = kpi1.join('') + kpi2 + kpi3;
     }
 
     /* ---------- FUNCIONES GERENTE (Creación de Malla) ---------- */
@@ -966,34 +1137,140 @@
     function seedDemo(){
         const now = new Date();
         const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
-        const eightDaysAgo = new Date(now); eightDaysAgo.setDate(now.getDate() - 8); // Outside 7-day deadline
+        const fiveDaysAgo = new Date(now); fiveDaysAgo.setDate(now.getDate() - 5);
+        const tenDaysAgo = new Date(now); tenDaysAgo.setDate(now.getDate() - 10);
+        const fifteenDaysAgo = new Date(now); fifteenDaysAgo.setDate(now.getDate() - 15);
+        const twentyDaysAgo = new Date(now); twentyDaysAgo.setDate(now.getDate() - 20);
+        
+        // Set Publication Date to 25 days ago (to test KPI 2 logic against a past "Plan Semanal")
+        const pubDate = new Date(now); pubDate.setDate(now.getDate() - 25);
+        mallaMetadata.publicationDate = pubDate.toLocaleString(); 
+        
+        // Reference Dates for Solicitudes (Deadline is 7 days from request date)
+        const todayISO = now.toISOString();
+        const fiveDaysAgoISO = fiveDaysAgo.toISOString();
+        const tenDaysAgoISO = tenDaysAgo.toISOString();
+        const fifteenDaysAgoISO = fifteenDaysAgo.toISOString();
+        const twentyDaysAgoISO = twentyDaysAgo.toISOString();
+        const pubDateISO = pubDate.toISOString();
 
-        // Reset de Planilla para IDs consistentes en el demo
-        planillaPublicada = [
-            // Crew Constanza (Operativo)
-            { id: 101, empleado:'Crew Constanza', fecha:'2025-10-28', inicio:'08:00', fin:'13:00', cargo:'Crew', posicion:'Caja', clasificacion: 'am'},
-            { id: 102, empleado:'Crew Constanza', fecha:'2025-10-29', inicio:'15:00', fin:'20:00', cargo:'Crew', posicion:'Cocina', clasificacion: 'pm'},
-            // Crew Felipe (Operativo)
-            { id: 103, empleado:'Crew Felipe', fecha:'2025-10-28', inicio:'10:00', fin:'18:00', cargo:'Crew', posicion:'Cocina', clasificacion: 'pm'},
-            { id: 104, empleado:'Crew Felipe', fecha:'2025-10-31', inicio:'07:00', fin:'14:00', cargo:'Crew', posicion:null, clasificacion: 'am'}, // Sin posicion para demostrar asignación
-            // Entrenador Juan (Operativo)
-            { id: 105, empleado:'Entrenador Juan', fecha:'2025-10-28', inicio:'09:00', fin:'17:00', cargo:'Entrenador', posicion:'Sala', clasificacion: 'am'},
-            { id: 106, empleado:'Entrenador Juan', fecha:'2025-10-30', inicio:'10:00', fin:'18:00', cargo:'Entrenador', posicion:'Automac', clasificacion: 'pm'},
-            // Gerente Jefe (NO Operativo - No debe contar en Home Planilla Info)
-            { id: 107, empleado:'Gerente Jefe', fecha:'2025-10-28', inicio:'07:00', fin:'15:00', cargo:'Gerente', posicion:'Oficina', clasificacion: 'am'},
+
+        // --- USERS (13 total. 10 operativos: 3 Entrenadores, 7 Crew) ---
+        allUsers = [
+            { name: 'Admin User', role: 'admin', user: 'admin', pass: '1234' },
+            { name: 'Ricardo RRHH', role: 'rrhh', user: 'rrhh', pass: '1234' },
+            { name: 'Gerente Jefe', role: 'gerente', user: 'gerente', pass: '1234' },
+            { name: 'Entrenador Juan', role: 'entrenador', user: 'entrenador', pass: '1234' },
+            { name: 'Entrenador Sofi', role: 'entrenador', user: 'sofi', pass: '1234' }, 
+            { name: 'Entrenador Luis', role: 'entrenador', user: 'luis', pass: '1234' }, 
+            { name: 'Crew Constanza', role: 'crew', user: 'crew', pass: '1234' },
+            { name: 'Crew Felipe', role: 'crew', user: 'felipe', pass: '1234' },
+            { name: 'Crew Andrea', role: 'crew', user: 'andrea', pass: '1234' }, 
+            { name: 'Crew Daniel', role: 'crew', user: 'daniel', pass: '1234' }, 
+            { name: 'Crew Emilia', role: 'crew', user: 'emilia', pass: '1234' }, 
+            { name: 'Crew Gaston', role: 'crew', user: 'gaston', pass: '1234' }, 
+            { name: 'Crew Jose', role: 'crew', user: 'jose', pass: '1234' }, 
         ];
+
+        // --- PLANILLA (80 turnos operativos + 4 de Gerente = 84 total.) ---
+        // Generando 8 turnos por empleado operativo (10 empleados) * 4 semanas = 80 turnos
+        planillaPublicada = [];
+        const operationalNames = allUsers.filter(u => u.role === 'crew' || u.role === 'entrenador').map(u => u.name);
+        let idCounter = 100;
         
-        // Reset de Solicitudes - Agregando motivoRechazo y fechaRespuesta
+        for (let w = 0; w < 4; w++) {
+            for (let d = 0; d < 7; d++) {
+                const date = new Date(mallaMetadata.startDate);
+                date.setDate(date.getDate() + (w * 7) + d);
+                const dateString = date.toISOString().split('T')[0];
+                
+                // Distribución de 3 turnos por día para 10 empleados (casi 3 empleados por turno)
+                const assignments = [
+                    { name: 'Crew Constanza', time: '07:00-15:00', pos: 'Caja', clas: 'am' },
+                    { name: 'Crew Felipe', time: '08:00-16:00', pos: 'Cocina', clas: 'am' },
+                    { name: 'Crew Andrea', time: '09:00-17:00', pos: 'Sala', clas: 'am' },
+                    { name: 'Entrenador Juan', time: '13:00-21:00', pos: 'Cocina', clas: 'pm' },
+                    { name: 'Entrenador Sofi', time: '14:00-22:00', pos: 'AutoMac', clas: 'pm' },
+                    { name: 'Crew Daniel', time: '15:00-23:00', pos: 'Caja', clas: 'pm' },
+                    { name: 'Crew Emilia', time: '22:00-06:00', pos: 'Cocina', clas: 'nocturno' },
+                    { name: 'Entrenador Luis', time: '23:00-07:00', pos: 'AutoMac', clas: 'nocturno' },
+                    // Relleno aleatorio para llegar a 80
+                    { name: 'Crew Gaston', time: '10:00-18:00', pos: 'Sala', clas: 'am' },
+                    { name: 'Crew Jose', time: '11:00-19:00', pos: 'Caja', clas: 'pm' },
+                ];
+                
+                assignments.forEach(a => {
+                    if (idCounter < 181) { // Stop at 80 operational shifts
+                        planillaPublicada.push({ 
+                            id: ++idCounter, 
+                            empleado: a.name, 
+                            fecha: dateString, 
+                            inicio: a.time.split('-')[0], 
+                            fin: a.time.split('-')[1], 
+                            cargo: allUsers.find(u => u.name === a.name).role.replace('entrenador', 'Entrenador').replace('crew', 'Crew'), 
+                            posicion: a.pos, 
+                            clasificacion: a.clas
+                        });
+                    }
+                });
+            }
+        }
+        
+        // Agregar 4 turnos de Gerente
+        planillaPublicada.push(
+            { id: 201, empleado:'Gerente Jefe', fecha:'2025-10-27', inicio:'07:00', fin:'15:00', cargo:'Gerente', posicion:'Oficina', clasificacion: 'am'},
+            { id: 202, empleado:'Gerente Jefe', fecha:'2025-11-03', inicio:'07:00', fin:'15:00', cargo:'Gerente', posicion:'Oficina', clasificacion: 'am'},
+            { id: 203, empleado:'Gerente Jefe', fecha:'2025-11-10', inicio:'07:00', fin:'15:00', cargo:'Gerente', posicion:'Oficina', clasificacion: 'am'},
+            { id: 204, empleado:'Gerente Jefe', fecha:'2025-11-17', inicio:'07:00', fin:'15:00', cargo:'Gerente', posicion:'Oficina', clasificacion: 'am'},
+        );
+
+
+        // --- SOLICITUDES (Total 15 relevantes para KPI 3) ---
         solicitudes = [
-            // Solicitud de Turno (Crew -> Gerente) - PENDIENTE
-            { id: 1, tipo: 'Turno', empleado: 'Crew Constanza', turnoOriginalId: 102, turnoOriginal: '2025-10-29 15:00-20:00', turnoPedido: '2025-10-29 08:00-13:00', motivo: 'Cita médica', estado: 'Pendiente', fechaSolicitud: yesterday.toISOString(), motivoRechazo: null, fechaRespuesta: null },
-            // Solicitud de Posición (Entrenador -> Gerente) - RECHAZADA FUERA DE PLAZO (simulación)
-            { id: 2, tipo: 'PosicionEntrenador', empleado: 'Entrenador Juan', turnoOriginalId: 105, turnoOriginal: '2025-10-28 09:00-17:00', posicionOriginal: 'Sala', posicionPedida: 'Cocina', motivo: 'Necesito práctica en Cocina', estado: 'Rechazado', fechaSolicitud: eightDaysAgo.toISOString(), motivoRechazo: 'No se aprobó por falta de cobertura en Sala.', fechaRespuesta: now.toISOString() },
-            // Solicitud de Posición (Crew -> Entrenador) - APROBADA DENTRO DE PLAZO (para Crew status)
-            { id: 3, tipo: 'PosicionCrew', empleado: 'Crew Constanza', turnoOriginalId: 101, turnoOriginal: '2025-10-28 08:00-13:00', posicionOriginal: 'Caja', posicionPedida: 'Automac', motivo: 'Más cómodo en Automac', estado: 'Aprobado', fechaSolicitud: yesterday.toISOString(), motivoRechazo: null, fechaRespuesta: yesterday.toISOString() },
+            // S1 (Turno): PENDIENTE (Enviada hoy) (KPI 3)
+            { id: 1, tipo: 'Turno', empleado: 'Crew Constanza', turnoOriginalId: 101, turnoOriginal: '2025-10-27 07:00-15:00', turnoPedido: '2025-10-27 09:00-17:00', motivo: 'Cambio de bus', estado: 'Pendiente', fechaSolicitud: todayISO, motivoRechazo: null, fechaRespuesta: null, semanaOriginal: getWeekInfoByDate('2025-10-27').display },
+
+            // --- RESUELTAS DENTRO DE PLAZO (12 total para KPI 3) ---
+            // S2 (Turno): Aprobado - Resuelto 5 días después. (KPI 2 & 3)
+            { id: 2, tipo: 'Turno', empleado: 'Crew Felipe', turnoOriginalId: 104, turnoOriginal: '2025-10-28 10:00-18:00', turnoPedido: '2025-10-28 11:00-19:00', motivo: 'Cita médica', estado: 'Aprobado', fechaSolicitud: fifteenDaysAgoISO, motivoRechazo: null, fechaRespuesta: tenDaysAgoISO, semanaOriginal: getWeekInfoByDate('2025-10-28').display },
+            // S3 (PosEntr): Rechazado - Resuelto 2 días después. (KPI 3)
+            { id: 3, tipo: 'PosicionEntrenador', empleado: 'Entrenador Juan', turnoOriginalId: 114, turnoOriginal: '2025-10-28 09:00-17:00', posicionOriginal: 'Sala', posicionPedida: 'Caja', motivo: 'Necesito más experiencia', estado: 'Rechazado', fechaSolicitud: fifteenDaysAgoISO, motivoRechazo: 'No hay reemplazo en Sala.', fechaRespuesta: tenDaysAgoISO, semanaOriginal: getWeekInfoByDate('2025-10-28').display },
+            // S4 (Turno): Aprobado - Resuelto 1 día después. (KPI 2 & 3)
+            { id: 4, tipo: 'Turno', empleado: 'Crew Andrea', turnoOriginalId: 107, turnoOriginal: '2025-10-28 16:00-23:00', turnoPedido: '2025-10-28 14:00-21:00', motivo: 'Cambio de estudios', estado: 'Aprobado', fechaSolicitud: twentyDaysAgoISO, motivoRechazo: null, fechaRespuesta: fifteenDaysAgoISO, semanaOriginal: getWeekInfoByDate('2025-10-28').display },
+            // S5 (PosEntr): Aprobado - Resuelto 3 días después. (KPI 3)
+            { id: 5, tipo: 'PosicionEntrenador', empleado: 'Entrenador Sofi', turnoOriginalId: 116, turnoOriginal: '2025-10-29 14:00-22:00', posicionOriginal: 'Cocina', posicionPedida: 'Caja', motivo: 'Mejor visibilidad', estado: 'Aprobado', fechaSolicitud: fifteenDaysAgoISO, motivoRechazo: null, fechaRespuesta: tenDaysAgoISO, semanaOriginal: getWeekInfoByDate('2025-10-29').display },
+            // S6 (Turno): Rechazado - Resuelto 5 días después. (KPI 2 & 3)
+            { id: 6, tipo: 'Turno', empleado: 'Crew Daniel', turnoOriginalId: 109, turnoOriginal: '2025-10-30 08:00-15:00', turnoPedido: '2025-10-30 10:00-17:00', motivo: 'Problema familiar', estado: 'Rechazado', fechaSolicitud: fiveDaysAgoISO, motivoRechazo: 'No hay cobertura AM.', fechaRespuesta: todayISO, semanaOriginal: getWeekInfoByDate('2025-10-30').display },
+            // S7 (PosEntr): Rechazado - Resuelto 1 día después. (KPI 3)
+            { id: 7, tipo: 'PosicionEntrenador', empleado: 'Entrenador Luis', turnoOriginalId: 118, turnoOriginal: '2025-11-01 07:00-15:00', posicionOriginal: 'Sala', posicionPedida: 'Cocina', motivo: 'Entrenamiento en Cocina', estado: 'Rechazado', fechaSolicitud: fiveDaysAgoISO, motivoRechazo: 'Posición no prioritaria.', fechaRespuesta: todayISO, semanaOriginal: getWeekInfoByDate('2025-11-01').display },
+            // S8 (Turno): Aprobado - Resuelto 2 días después. (KPI 2 & 3)
+            { id: 8, tipo: 'Turno', empleado: 'Crew Emilia', turnoOriginalId: 111, turnoOriginal: '2025-11-01 09:00-17:00', turnoPedido: '2025-11-01 10:00-18:00', motivo: 'Cambio solicitado por Gerente', estado: 'Aprobado', fechaSolicitud: tenDaysAgoISO, motivoRechazo: null, fechaRespuesta: fiveDaysAgoISO, semanaOriginal: getWeekInfoByDate('2025-11-01').display },
+            // S9 (PosEntr): Aprobado - Resuelto 3 días después. (KPI 3)
+            { id: 9, tipo: 'PosicionEntrenador', empleado: 'Entrenador Juan', turnoOriginalId: 115, turnoOriginal: '2025-10-30 10:00-18:00', posicionOriginal: 'AutoMac', posicionPedida: 'Cocina', motivo: 'Necesario', estado: 'Aprobado', fechaSolicitud: fiveDaysAgoISO, motivoRechazo: null, fechaRespuesta: todayISO, semanaOriginal: getWeekInfoByDate('2025-10-30').display },
+            // S10 (Turno): Aprobado - Resuelto 5 días después. (KPI 2 & 3)
+            { id: 10, tipo: 'Turno', empleado: 'Crew Gaston', turnoOriginalId: 112, turnoOriginal: '2025-11-02 12:00-20:00', turnoPedido: '2025-11-02 14:00-22:00', motivo: 'Evento deportivo', estado: 'Aprobado', fechaSolicitud: tenDaysAgoISO, motivoRechazo: null, fechaRespuesta: fiveDaysAgoISO, semanaOriginal: getWeekInfoByDate('2025-11-02').display },
+            // S11 (PosEntr): Rechazado - Resuelto 4 días después. (KPI 3)
+            { id: 11, tipo: 'PosicionEntrenador', empleado: 'Entrenador Sofi', turnoOriginalId: 117, turnoOriginal: '2025-10-31 21:00-05:00', posicionOriginal: 'Caja', posicionPedida: 'Sala', motivo: 'No me gusta nocturno', estado: 'Rechazado', fechaSolicitud: tenDaysAgoISO, motivoRechazo: 'Nocturno requiere Caja.', fechaRespuesta: fiveDaysAgoISO, semanaOriginal: getWeekInfoByDate('2025-10-31').display },
+            // S12 (Turno): Rechazado - Resuelto 1 día después. (KPI 2 & 3)
+            { id: 12, tipo: 'Turno', empleado: 'Crew Jose', turnoOriginalId: 113, turnoOriginal: '2025-11-03 08:00-14:00', turnoPedido: '2025-11-03 10:00-16:00', motivo: 'Cita médica', estado: 'Rechazado', fechaSolicitud: fiveDaysAgoISO, motivoRechazo: 'No hay reemplazo AM.', fechaRespuesta: yesterday.toISOString(), semanaOriginal: getWeekInfoByDate('2025-11-03').display },
+            // S16 (Turno): Aprobado - Resuelto 5 días después. (KPI 2 & 3)
+            { id: 16, tipo: 'Turno', empleado: 'Crew Andrea', turnoOriginalId: 108, turnoOriginal: '2025-10-29 08:00-16:00', turnoPedido: '2025-10-29 09:00-17:00', motivo: 'Cambio de bus', estado: 'Aprobado', fechaSolicitud: fifteenDaysAgoISO, motivoRechazo: null, fechaRespuesta: tenDaysAgoISO, semanaOriginal: getWeekInfoByDate('2025-10-29').display },
+
+
+            // --- RESUELTAS FUERA DE PLAZO (3 total para KPI 3) ---
+            // S13 (PosEntr): Rechazado - Resuelto 9 días después. (KPI 3)
+            { id: 13, tipo: 'PosicionEntrenador', empleado: 'Entrenador Juan', turnoOriginalId: 115, turnoOriginal: '2025-10-30 10:00-18:00', posicionOriginal: 'AutoMac', posicionPedida: 'Cocina', motivo: 'Necesito más entrenamiento', estado: 'Rechazado', fechaSolicitud: fifteenDaysAgoISO, motivoRechazo: 'Revisión tardía.', fechaRespuesta: fiveDaysAgoISO, semanaOriginal: getWeekInfoByDate('2025-10-30').display },
+            // S14 (Turno): Aprobado - Resuelto 10 días después. (KPI 2 & 3)
+            { id: 14, tipo: 'Turno', empleado: 'Crew Constanza', turnoOriginalId: 101, turnoOriginal: '2025-10-27 07:00-15:00', turnoPedido: '2025-10-27 09:00-17:00', motivo: 'Error en Planificación', estado: 'Aprobado', fechaSolicitud: fifteenDaysAgoISO, motivoRechazo: null, fechaRespuesta: fiveDaysAgoISO, semanaOriginal: getWeekInfoByDate('2025-10-27').display },
+            // S17 (PosEntr): Rechazado - Resuelto 10 días después. (KPI 3)
+            { id: 17, tipo: 'PosicionEntrenador', empleado: 'Entrenador Sofi', turnoOriginalId: 116, turnoOriginal: '2025-10-29 14:00-22:00', posicionOriginal: 'Cocina', posicionPedida: 'Caja', motivo: 'Quiero cambiar', estado: 'Rechazado', fechaSolicitud: twentyDaysAgoISO, motivoRechazo: 'Ya fue aprobado otro cambio', fechaRespuesta: tenDaysAgoISO, semanaOriginal: getWeekInfoByDate('2025-10-29').display },
+
+            // S15: Solicitud de PosicionCrew (No relevante para KPI 3)
+            { id: 15, tipo: 'PosicionCrew', empleado: 'Crew Constanza', turnoOriginalId: 101, turnoOriginal: '2025-10-28 08:00-13:00', posicionOriginal: 'Caja', posicionPedida: 'Automac', motivo: 'Más cómodo en Automac', estado: 'Aprobado', fechaSolicitud: yesterday.toISOString(), motivoRechazo: null, fechaRespuesta: yesterday.toISOString(), semanaOriginal: getWeekInfoByDate('2025-10-28').display },
+
         ];
         
-        alert(`Demo cargado: ${planillaPublicada.length} turnos totales, 6 operativos y 1 solicitud pendiente.`);
+        alert(`Demo cargado: ${allUsers.length} usuarios (10 operativos), ${planillaPublicada.length} turnos (80 operativos), y ${solicitudes.length} solicitudes (15 relevantes para KPIs).`);
         updateHomeDashboard(); // Actualiza contadores del Home
     }
     
@@ -1037,118 +1314,6 @@
             tr.innerHTML = `<td>${t.empleado}</td><td>${t.fecha}</td><td>${t.inicio}</td><td>${t.fin}</td><td>${t.clasificacion.toUpperCase()}</td><td>${t.cargo}</td><td>${t.posicion || 'SIN POSICIÓN'}</td>`;
             tbody.appendChild(tr);
         });
-    }
-    
-    /* ---------- FUNCIONES ENTRENADOR (Mis Turnos y Solicitud) ---------- */
-
-    function renderMiPlanillaEntrenador(){
-        const tbody = document.querySelector('#tableMiPlanillaEntrenador tbody');
-        tbody.innerHTML = '';
-        if(!currentUser) return;
-        
-        // Display metadata
-        const headerHtml = `
-              <div style="background: #f0f0f0; padding: 10px; border-radius: 8px; margin-bottom: 15px;">
-                  <strong>Semana:</strong> ${mallaMetadata.startDate} - ${mallaMetadata.endDate}<br>
-                  <span class="muted">Publicada: ${mallaMetadata.publicationDate}</span>
-              </div>`;
-        document.getElementById('miPlanillaEntrenadorHeader').innerHTML = headerHtml;
-        
-        const filtro = document.getElementById('filtroMiPlanillaEntrenador').value.toLowerCase();
-        
-        // Filter for current user AND role 'Entrenador'
-        const mis = planillaPublicada.filter(t => 
-            t.empleado.toLowerCase() === currentUser.name.toLowerCase() && 
-            t.cargo === 'Entrenador' &&
-            t.fecha.includes(filtro)
-        );
-
-        mis.forEach(t=>{
-            const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${t.fecha}</td><td>${t.inicio}</td><td>${t.fin}</td><td>${t.clasificacion.toUpperCase()}</td><td>**${t.posicion || 'N/A'}**</td>`;
-            tbody.appendChild(tr);
-        });
-    }
-
-    function populateMisTurnosTurnoSelectEntrenador(){
-        const sel = document.getElementById('selectMisTurnosTurnoEntrenador');
-        sel.innerHTML = '';
-        if(!currentUser) return;
-        
-        // Filter for current user AND role 'Entrenador' AND not 'Libre'
-        const mis = planillaPublicada.filter(t=>
-            t.empleado.toLowerCase() === currentUser.name.toLowerCase() && 
-            t.cargo === 'Entrenador' && 
-            t.inicio !== 'Libre'
-        );
-        
-        if(mis.length===0){
-            const opt = document.createElement('option'); opt.text='(No tienes turnos de Entrenador asignados)'; opt.value=''; sel.appendChild(opt); return;
-        }
-        
-        const defaultOpt = document.createElement('option');
-        defaultOpt.text = 'Selecciona un turno a cambiar';
-        defaultOpt.value = '';
-        sel.appendChild(defaultOpt);
-        
-        mis.forEach((t,i)=>{
-            const opt = document.createElement('option');
-            opt.value = t.id; opt.text = `${t.fecha} - ${t.inicio} a ${t.fin} (${t.clasificacion.toUpperCase()}, Posición: ${t.posicion || 'SIN POSICIÓN'})`;
-            sel.appendChild(opt);
-        });
-        document.getElementById('turnoOriginalInfoEntrenador').innerText = 'N/A';
-    }
-
-    function prepararSolicitudCambioTurnoEntrenador(turnoId) {
-        if (!turnoId) {
-            document.getElementById('turnoIdACambiarEntrenador').value = '';
-            document.getElementById('turnoOriginalInfoEntrenador').innerText = 'N/A';
-            return;
-        }
-        
-        const turno = planillaPublicada.find(t => t.id == parseInt(turnoId));
-        if (!turno) return;
-
-        document.getElementById('turnoIdACambiarEntrenador').value = turnoId;
-        document.getElementById('turnoOriginalInfoEntrenador').innerText = `${turno.fecha} ${turno.inicio}-${turno.fin} (${turno.clasificacion.toUpperCase()}, Posición: ${turno.posicion || 'N/A'})`;
-    }
-
-    function enviarSolicitudTurnoEntrenador() {
-        if(!currentUser) return alert('Debes iniciar sesión.');
-        if(currentUser.role !== 'entrenador') return alert('Solo los Entrenadores pueden usar esta función.');
-
-        const turnoId = document.getElementById('turnoIdACambiarEntrenador').value;
-        if(!turnoId) return alert('Selecciona un turno válido para el cambio.');
-
-        const turnoOriginal = planillaPublicada.find(t => t.id == turnoId);
-        if(!turnoOriginal || turnoOriginal.cargo !== 'Entrenador') return alert('Turno original no válido o no es un turno de Entrenador.');
-
-        const sugFecha = document.getElementById('sugFechaEntrenador').value;
-        const sugInicio = document.getElementById('sugInicioEntrenador').value;
-        const sugFin = document.getElementById('sugFinEntrenador').value;
-        const motivo = document.getElementById('motivoCambioEntrenador').value.trim();
-        
-        if(!sugFecha||!sugInicio||!sugFin||!motivo) return alert('Completa todos los campos de la solicitud de Turno.');
-        
-        let solicitud = { 
-            id: Date.now(), 
-            empleado: currentUser.name, 
-            tipo: 'Turno', 
-            estado: 'Pendiente', 
-            fechaSolicitud: new Date().toISOString(), 
-            turnoOriginalId: turnoOriginal.id,
-            turnoOriginal: `${turnoOriginal.fecha} ${turnoOriginal.inicio}-${turnoOriginal.fin}`,
-            turnoPedido: `${sugFecha} ${sugInicio}-${sugFin}`,
-            motivo: motivo,
-            motivoRechazo: null,
-            fechaRespuesta: null
-        };
-        
-        solicitudes.push(solicitud);
-        document.getElementById('solicitarCambioTurnoEntrenadorWrapper').querySelector('form').reset();
-        updateHomeDashboard();
-        alert(`Solicitud de Turno enviada con éxito al Gerente (simulado)`);
-        nav('misTurnosYCambioEntrenador'); 
     }
 
     /* ---------- FUNCIONES GERENTE (Planif. Posiciones) ---------- */
@@ -1244,19 +1409,21 @@
     }
     
     // Prepara la info del turno a cambiar (usado por la nueva sección de Crew)
-    function prepararSolicitudCambioTurno(turnoId) {
-        if (!turnoId) {
+    function prepararSolicitudCambioTurno(value) {
+        if (!value) {
             document.getElementById('turnoIdACambiar').value = '';
             document.getElementById('turnoOriginalInfo').innerText = 'N/A';
             return;
         }
         
+        const [turnoId, semanaDisplay] = value.split('|'); // MODIFICADO
+        
         const turno = planillaPublicada.find(t => t.id == parseInt(turnoId));
         if (!turno) return;
 
         // Rellenar la información del turno a cambiar
-        document.getElementById('turnoIdACambiar').value = turnoId;
-        document.getElementById('turnoOriginalInfo').innerText = `${turno.fecha} ${turno.inicio}-${turno.fin} (${turno.clasificacion.toUpperCase()}, Posición: ${turno.posicion || 'N/A'})`;
+        document.getElementById('turnoIdACambiar').value = `${turnoId}|${semanaDisplay}`; // MODIFICADO: Store ID and week for sending
+        document.getElementById('turnoOriginalInfo').innerText = `${semanaDisplay} - ${turno.fecha} ${turno.inicio}-${turno.fin} (${turno.clasificacion.toUpperCase()}, Posición: ${turno.posicion || 'N/A'})`; // MODIFICADO: Display week
     }
 
 
@@ -1281,11 +1448,15 @@
         sel.appendChild(defaultOpt);
         
         mis.forEach((t,i)=>{
+            const semana = getWeekInfoByDate(t.fecha); // NEW
             const opt = document.createElement('option');
-            opt.value = t.id; opt.text = `${t.fecha} - ${t.inicio} a ${t.fin} (${t.clasificacion.toUpperCase()}, Posición: ${t.posicion || 'SIN POSICIÓN'})`;
+            opt.value = `${t.id}|${semana.display}`; // MODIFICADO: Store shift ID and week display
+            opt.text = `${semana.display} - ${t.fecha} - ${t.inicio} a ${t.fin} (${t.clasificacion.toUpperCase()})`; // MODIFICADO: Add week display
             sel.appendChild(opt);
         });
         document.getElementById('turnoOriginalInfo').innerText = 'N/A';
+        // Force the display info update on change
+        document.getElementById('selectMisTurnosTurno').onchange = () => prepararSolicitudCambioTurno(document.getElementById('selectMisTurnosTurno').value);
     }
 
     
@@ -1312,8 +1483,10 @@
     function enviarSolicitudTurno() {
         if(!currentUser) return alert('Debes iniciar sesión.');
 
-        const turnoId = document.getElementById('turnoIdACambiar').value;
-        if(!turnoId) return alert('Selecciona un turno válido para el cambio.');
+        const fullValue = document.getElementById('turnoIdACambiar').value;
+        if(!fullValue) return alert('Selecciona un turno válido para el cambio.');
+
+        const [turnoId, semanaOriginal] = fullValue.split('|'); // MODIFICADO: Retrieve ID and week
 
         const turnoOriginal = planillaPublicada.find(t => t.id == turnoId);
         if(!turnoOriginal) return alert('Turno original no válido.');
@@ -1330,13 +1503,14 @@
             empleado: currentUser.name, 
             tipo: 'Turno', 
             estado: 'Pendiente', 
-            fechaSolicitud: new Date().toISOString(), // NEW: Save as ISO string
+            fechaSolicitud: new Date().toISOString(), 
             turnoOriginalId: turnoOriginal.id,
             turnoOriginal: `${turnoOriginal.fecha} ${turnoOriginal.inicio}-${turnoOriginal.fin}`,
             turnoPedido: `${sugFecha} ${sugInicio}-${sugFin}`,
             motivo: motivo,
             motivoRechazo: null,
-            fechaRespuesta: null
+            fechaRespuesta: null,
+            semanaOriginal: semanaOriginal // NEW FIELD
         };
         
         solicitudes.push(solicitud);
@@ -1418,8 +1592,9 @@
         let detalles;
         
         if (tipo === 'Turno') {
-          // Add Fecha de Solicitud to table
-          detalles = `<td>${empleadoCol}</td><td>${fechaSolicitud}</td><td>${s.turnoOriginal}</td><td>${s.turnoPedido}</td><td>${s.motivo}</td>`;
+          // Add Fecha de Solicitud and Semana Original to table
+          const semanaDisplay = s.semanaOriginal || 'N/A'; // NEW
+          detalles = `<td>${empleadoCol}</td><td>${fechaSolicitud}</td><td>${semanaDisplay}</td><td>${s.turnoOriginal}</td><td>${s.turnoPedido}</td><td>${s.motivo}</td>`;
         } else { // PosicionEntrenador
           // Add Fecha de Solicitud to table
           if (s.empleado !== s.empleadoAfectado) {
@@ -1552,6 +1727,219 @@
         });
     }
 
+    /* ---------- FUNCIONES ENTRENADOR (Mis Turnos y Solicitud) ---------- */
+
+    function renderMiPlanillaEntrenador(){
+        const tbody = document.querySelector('#tableMiPlanillaEntrenador tbody');
+        tbody.innerHTML = '';
+        if(!currentUser) return;
+        
+        // Display metadata
+        const headerHtml = `
+              <div style="background: #f0f0f0; padding: 10px; border-radius: 8px; margin-bottom: 15px;">
+                  <strong>Semana:</strong> ${mallaMetadata.startDate} - ${mallaMetadata.endDate}<br>
+                  <span class="muted">Publicada: ${mallaMetadata.publicationDate}</span>
+              </div>`;
+        document.getElementById('miPlanillaEntrenadorHeader').innerHTML = headerHtml;
+        
+        const filtro = document.getElementById('filtroMiPlanillaEntrenador').value.toLowerCase();
+        
+        // Filter for current user AND role 'Entrenador'
+        const mis = planillaPublicada.filter(t => 
+            t.empleado.toLowerCase() === currentUser.name.toLowerCase() && 
+            t.cargo === 'Entrenador' &&
+            t.fecha.includes(filtro)
+        );
+
+        mis.forEach(t=>{
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${t.fecha}</td><td>${t.inicio}</td><td>${t.fin}</td><td>${t.clasificacion.toUpperCase()}</td><td>**${t.posicion || 'N/A'}**</td>`;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function populateMisTurnosTurnoSelectEntrenador(){
+        const sel = document.getElementById('selectMisTurnosTurnoEntrenador');
+        sel.innerHTML = '';
+        if(!currentUser) return;
+        
+        // Filter for current user AND role 'Entrenador' AND not 'Libre'
+        const mis = planillaPublicada.filter(t=>
+            t.empleado.toLowerCase() === currentUser.name.toLowerCase() && 
+            t.cargo === 'Entrenador' && 
+            t.inicio !== 'Libre'
+        );
+        
+        if(mis.length===0){
+            const opt = document.createElement('option'); opt.text='(No tienes turnos de Entrenador asignados)'; opt.value=''; sel.appendChild(opt); return;
+        }
+        
+        const defaultOpt = document.createElement('option');
+        defaultOpt.text = 'Selecciona un turno a cambiar';
+        defaultOpt.value = '';
+        sel.appendChild(defaultOpt);
+        
+        mis.forEach((t,i)=>{
+            const semana = getWeekInfoByDate(t.fecha); // NEW
+            const opt = document.createElement('option');
+            opt.value = `${t.id}|${semana.display}`; // MODIFICADO: Store shift ID and week display
+            opt.text = `${semana.display} - ${t.fecha} - ${t.inicio} a ${t.fin} (${t.clasificacion.toUpperCase()})`; // MODIFICADO: Add week display
+            sel.appendChild(opt);
+        });
+        document.getElementById('turnoOriginalInfoEntrenador').innerText = 'N/A';
+        // Force the display info update on change
+        document.getElementById('selectMisTurnosTurnoEntrenador').onchange = () => prepararSolicitudCambioTurnoEntrenador(document.getElementById('selectMisTurnosTurnoEntrenador').value);
+    }
+
+    function prepararSolicitudCambioTurnoEntrenador(value) {
+        if (!value) {
+            document.getElementById('turnoIdACambiarEntrenador').value = '';
+            document.getElementById('turnoOriginalInfoEntrenador').innerText = 'N/A';
+            return;
+        }
+        
+        const [turnoId, semanaDisplay] = value.split('|'); // MODIFICADO
+        
+        const turno = planillaPublicada.find(t => t.id == parseInt(turnoId));
+        if (!turno) return;
+
+        document.getElementById('turnoIdACambiarEntrenador').value = `${turnoId}|${semanaDisplay}`; // MODIFICADO: Store ID and week
+        document.getElementById('turnoOriginalInfoEntrenador').innerText = `${semanaDisplay} - ${turno.fecha} ${turno.inicio}-${turno.fin} (${turno.clasificacion.toUpperCase()}, Posición: ${turno.posicion || 'N/A'})`; // MODIFICADO: Display week
+    }
+
+    function enviarSolicitudTurnoEntrenador() {
+        if(!currentUser) return alert('Debes iniciar sesión.');
+        if(currentUser.role !== 'entrenador') return alert('Solo los Entrenadores pueden usar esta función.');
+
+        const fullValue = document.getElementById('turnoIdACambiarEntrenador').value;
+        if(!fullValue) return alert('Selecciona un turno válido para el cambio.');
+        
+        const [turnoId, semanaOriginal] = fullValue.split('|'); // MODIFICADO: Retrieve ID and week
+
+        const turnoOriginal = planillaPublicada.find(t => t.id == turnoId);
+        if(!turnoOriginal || turnoOriginal.cargo !== 'Entrenador') return alert('Turno original no válido o no es un turno de Entrenador.');
+
+        const sugFecha = document.getElementById('sugFechaEntrenador').value;
+        const sugInicio = document.getElementById('sugInicioEntrenador').value;
+        const sugFin = document.getElementById('sugFinEntrenador').value;
+        const motivo = document.getElementById('motivoCambioEntrenador').value.trim();
+        
+        if(!sugFecha||!sugInicio||!sugFin||!motivo) return alert('Completa todos los campos de la solicitud de Turno.');
+        
+        let solicitud = { 
+            id: Date.now(), 
+            empleado: currentUser.name, 
+            tipo: 'Turno', 
+            estado: 'Pendiente', 
+            fechaSolicitud: new Date().toISOString(), 
+            turnoOriginalId: turnoOriginal.id,
+            turnoOriginal: `${turnoOriginal.fecha} ${turnoOriginal.inicio}-${turnoOriginal.fin}`,
+            turnoPedido: `${sugFecha} ${sugInicio}-${sugFin}`,
+            motivo: motivo,
+            motivoRechazo: null,
+            fechaRespuesta: null,
+            semanaOriginal: semanaOriginal // NEW FIELD
+        };
+        
+        solicitudes.push(solicitud);
+        document.getElementById('solicitarCambioTurnoEntrenadorWrapper').querySelector('form').reset();
+        updateHomeDashboard();
+        alert(`Solicitud de Turno enviada con éxito al Gerente (simulado)`);
+        nav('misTurnosYCambioEntrenador'); 
+    }
+    
+    /* ---------- FUNCIONES GERENTE (Planif. Posiciones) ---------- */
+    
+    // Renderiza la planilla para la planificación de posiciones (Gerente)
+    function renderPlanifPosiciones(){
+        const tbody = document.querySelector('#tablePlanifPosiciones tbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        
+        const filtro = document.getElementById('filtroPlanifPosiciones').value.toLowerCase();
+        
+        planillaPublicada.filter(t => (t.cargo === 'Crew' || t.cargo === 'Entrenador') && (
+            t.empleado.toLowerCase().includes(filtro) ||
+            (t.posicion && t.posicion.toLowerCase().includes(filtro)) ||
+            t.fecha.includes(filtro)
+        )).forEach(t=>{
+            const tr = document.createElement('tr');
+            const posicionDisplay = t.posicion || 'PENDIENTE';
+            tr.innerHTML = `<td>${t.empleado}</td><td>${t.fecha}</td><td>${t.inicio} - ${t.fin}</td><td>${t.clasificacion.toUpperCase()}</td><td>**${posicionDisplay}**</td><td class='actions'>
+                <button class='btn btn-sec' onclick='asignarPosicion(${t.id}, "${t.empleado}", "${t.fecha}")'>Asignar/Editar Posición</button>
+                <button class='btn' onclick='eliminarPosicion(${t.id})'>Eliminar</button>
+            </td>`;
+            tbody.appendChild(tr);
+        });
+    }
+    
+    // Asigna/Edita posición (Gerente) - Actualiza el valor real
+    function asignarPosicion(id, empleado, fecha){
+        const turnoIndex = planillaPublicada.findIndex(t => t.id === id);
+        if (turnoIndex === -1) return alert('Turno no encontrado.');
+        
+        const currentPosicion = planillaPublicada[turnoIndex].posicion || '';
+        
+        const newPosicion = prompt(`Nueva posición para ${empleado} (${fecha}, Turno ${planillaPublicada[turnoIndex].inicio}-${planillaPublicada[turnoIndex].fin}):`, currentPosicion);
+
+        if (newPosicion === null) {
+            return;
+        }
+
+        if (newPosicion.trim() === '') {
+             if (currentPosicion) {
+                // Si el usuario borra la posición existente
+                planillaPublicada[turnoIndex].posicion = null;
+                alert('Posición eliminada/reseteada.');
+                renderPlanifPosiciones();
+            }
+            return;
+        }
+
+        // Actualizar la posición
+        planillaPublicada[turnoIndex].posicion = newPosicion.trim();
+        alert(`Posición actualizada a **${newPosicion.trim()}** para ${empleado}.`);
+        renderPlanifPosiciones();
+    }
+
+    // Elimina posición (Gerente) - Pone el valor en null
+    function eliminarPosicion(id){
+        const turnoIndex = planillaPublicada.findIndex(t => t.id === id);
+        if (turnoIndex === -1) return alert('Turno no encontrado.');
+        
+        if (confirm(`¿Eliminar la posición de ${planillaPublicada[turnoIndex].empleado} para el turno ${planillaPublicada[turnoIndex].fecha} ${planillaPublicada[turnoIndex].inicio}-${planillaPublicada[turnoIndex].fin}?`)) {
+            planillaPublicada[turnoIndex].posicion = null;
+            alert('Posición eliminada.');
+            renderPlanifPosiciones();
+        }
+    }
+
+
+    // Renderiza planilla personal (Crew)
+    function renderMiPlanilla(){
+      const tbody = document.querySelector('#tableMiPlanilla tbody');
+      tbody.innerHTML = '';
+      if(!currentUser) return;
+      
+      const headerHtml = `
+            <div style="background: #f0f0f0; padding: 10px; border-radius: 8px; margin-bottom: 15px;">
+                <strong>Semana:</strong> ${mallaMetadata.startDate} - ${mallaMetadata.endDate}<br>
+                <span class="muted">Publicada: ${mallaMetadata.publicationDate}</span>
+            </div>`;
+        document.getElementById('miPlanillaHeader').innerHTML = headerHtml;
+      
+      const filtro = document.getElementById('filtroMiPlanilla').value.toLowerCase();
+        
+      const mis = planillaPublicada.filter(t => t.empleado.toLowerCase() === currentUser.name.toLowerCase() && t.fecha.includes(filtro));
+
+      mis.forEach(t=>{
+        const tr = document.createElement('tr');
+        // Se eliminó la columna "Acción"
+        tr.innerHTML = `<td>${t.fecha}</td><td>${t.inicio}</td><td>${t.fin}</td><td>${t.clasificacion.toUpperCase()}</td><td>**${t.posicion || 'N/A'}**</td>`;
+        tbody.appendChild(tr);
+      })
+    }
+    
     /* ---------- FUNCIONES ADMIN (Gestión de Usuarios) ---------- */
 
     function guardarUsuarioAdmin() {
