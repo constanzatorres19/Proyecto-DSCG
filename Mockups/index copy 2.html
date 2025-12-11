@@ -90,7 +90,7 @@
     #menuAdmin, #menuRRHH, #menuGerente, #menuEntrenador, #menuCrew {
       display: flex;
       flex-direction: column;
-      gap: 8px; /* Separación entre botones de rol */
+      gap: 12px; /* MODIFICADO para mayor separación */
     }
     
     /* Eliminar/Ajustar espacio entre HOME y botones de rol (usar gap de side-block) */
@@ -343,6 +343,13 @@
                     <select id="rrhhDiaTurno">
                         </select>
                     
+                    <label>Clasificación de Turno</label>
+                    <select id="rrhhClasificacionTurno">
+                        <option value="am">AM (Mañana)</option>
+                        <option value="pm">PM (Tarde)</option>
+                        <option value="nocturno">Nocturno</option>
+                    </select>
+
                     <label>Tipo de Turno</label>
                     <select id="rrhhTipoTurno" onchange="document.getElementById('turnos-row').style.display = (this.value === 'Libre') ? 'none' : 'flex'">
                         <option value="Normal">Turno Normal (Horas)</option>
@@ -376,7 +383,7 @@
             <h2>Solicitudes de Cambio de Turno Pendientes (Gerente)</h2>
             <p class="muted">Revisa y aprueba/rechaza los cambios solicitados por el Crew.</p>
             <table id="tableSolicitudesTurno">
-              <thead><tr><th>Empleado</th><th>Turno original</th><th>Turno pedido</th><th>Motivo</th><th>Estado</th><th>Acciones</th></tr></thead>
+              <thead><tr><th>Empleado</th><th>Fecha Solicitud</th><th>Turno original</th><th>Turno pedido</th><th>Motivo</th><th>Estado</th><th>Acciones</th></tr></thead>
               <tbody>
                 </tbody>
             </table>
@@ -384,10 +391,10 @@
 
           <section id="visualizarMalla" class="screen">
             <h2>Visualizar Malla Horaria (Turnos + Posiciones) (RR.HH. y Entrenador)</h2>
-            <p class="muted">Vista de la malla completa (turnos creados por Gerente y posiciones añadidas por el Gerente).</p>
+            <div id="mallaVisualizacionHeader"></div> <p class="muted">Vista de la malla completa (turnos creados por Gerente y posiciones añadidas por el Gerente).</p>
             <input type="text" id="filtroMallaVisualizacion" placeholder="Buscar por Empleado, Posición o Fecha..." style="width: 100%; margin-bottom: 10px;" onkeyup="renderMallaPublicada()">
             <table id="tableMallaVisualizacion">
-                <thead><tr><th>Empleado</th><th>Fecha</th><th>Inicio</th><th>Fin</th><th>Cargo</th><th>Posición</th></tr></thead>
+                <thead><tr><th>Empleado</th><th>Fecha</th><th>Inicio</th><th>Fin</th><th>Clasificación</th><th>Cargo</th><th>Posición</th></tr></thead>
                 <tbody>
                     </tbody>
             </table>
@@ -404,7 +411,7 @@
             <h3 style="margin-top: 15px;">Malla para Asignación de Posición</h3>
             <input type="text" id="filtroPlanifPosiciones" placeholder="Buscar por Empleado, Posición o Fecha..." style="width: 100%; margin-bottom: 10px;" onkeyup="renderPlanifPosiciones()">
             <table id="tablePlanifPosiciones">
-                <thead><tr><th>Empleado</th><th>Fecha</th><th>Turno</th><th>Posición Actual</th><th>Acciones</th></tr></thead>
+                <thead><tr><th>Empleado</th><th>Fecha</th><th>Turno</th><th>Clasificación</th><th>Posición Actual</th><th>Acciones</th></tr></thead>
                 <tbody>
                     </tbody>
             </table>
@@ -414,7 +421,7 @@
             <h2>Solicitudes de Cambio de Posición Pendientes (Gerente)</h2>
             <p class="muted">Revisa y aprueba/rechaza los cambios de posición solicitados por los Entrenadores.</p>
             <table id="tableSolicitudesPosicion">
-              <thead><tr><th>Entrenador</th><th>Turno</th><th>Posición Original</th><th>Posición Pedida</th><th>Motivo</th><th>Estado</th><th>Acciones</th></tr></thead>
+              <thead><tr><th>Entrenador</th><th>Fecha Solicitud</th><th>Turno</th><th>Posición Original</th><th>Posición Pedida</th><th>Motivo</th><th>Estado</th><th>Acciones</th></tr></thead>
               <tbody>
                 </tbody>
             </table>
@@ -478,9 +485,9 @@
 
           <section id="miPlanilla" class="screen">
             <h2>Mi Horario y Posición Asignada (Crew)</h2>
-            <p class="muted">Tu horario personal (turnos y posición asignada por el Gerente).</p>
+            <div id="miPlanillaHeader"></div> <p class="muted">Tu horario personal (turnos y posición asignada por el Gerente).</p>
             <input type="text" id="filtroMiPlanilla" placeholder="Buscar por fecha (YYYY-MM-DD)..." style="width: 100%; margin-bottom: 10px;" onkeyup="renderMiPlanilla()">
-            <table id="tableMiPlanilla"><thead><tr><th>Fecha</th><th>Inicio</th><th>Fin</th><th>Posición</th></tr></thead><tbody>
+            <table id="tableMiPlanilla"><thead><tr><th>Fecha</th><th>Inicio</th><th>Fin</th><th>Clasificación</th><th>Posición</th></tr></thead><tbody>
                 </tbody></table>
             </section>
 
@@ -496,7 +503,7 @@
             <h2>Historial de Turnos (Personales) (Crew)</h2>
             <p class="muted">Turnos completados y registros pasados.</p>
             <input type="text" id="filtroHistorial" placeholder="Buscar por fecha (YYYY-MM-DD)..." style="width: 100%; margin-bottom: 10px;" onkeyup="renderHistorial()">
-            <table id="tableHistorial"><thead><tr><th>Fecha</th><th>Inicio</th><th>Fin</th><th>Posición</th></tr></thead><tbody>
+            <table id="tableHistorial"><thead><tr><th>Fecha</th><th>Inicio</th><th>Fin</th><th>Clasificación</th><th>Posición</th></tr></thead><tbody>
                 </tbody></table>
           </section>
           
@@ -523,6 +530,14 @@
     let planillaPublicada = []; // Malla con Turnos + Posiciones
     let solicitudes = []; // Todas las solicitudes (Turno, PosicionEntrenador, PosicionCrew)
 
+    // NEW: Malla Metadata for visualization
+    let mallaMetadata = {
+        startDate: '2025-10-28',
+        endDate: '2025-11-03',
+        publicationDate: new Date('2025-10-26T10:00:00').toLocaleString() // Simulating publication 2 days before
+    };
+
+
     const ROLES = {
         admin: 'Admin',
         rrhh: 'RR.HH.',
@@ -547,7 +562,7 @@
         if (currentUser.role !== 'gerente') return;
 
         // FIX 1: Contar solo turnos de personal operativo (Crew o Entrenador) para la congruencia.
-        const operationalShifts = planillaPublicada.filter(t => t.cargo === 'Crew' || t.cargo === 'Entrenador');
+        const operationalShifts = planillaPublicada.filter(t => t.cargo !== 'Gerente' && t.cargo !== 'Admin' && t.cargo !== 'RR.HH.' && t.inicio !== 'Libre');
         
         // 1. Planilla Info 
         document.getElementById('homePlanillaInfo').innerText = operationalShifts.length + ' turnos operativos publicados'; 
@@ -747,8 +762,9 @@
                 if (turno) {
                     const turnoId = `${turno.id}`;
                     const isLibre = turno.inicio === 'Libre';
+                    const clasificacion = turno.clasificacion ? ` (${turno.clasificacion.toUpperCase()})` : '';
                     tableHTML += `<td><div class="turno-box ${isLibre ? 'turno-libre' : ''}" onclick="abrirFormEditarTurno('${turnoId}')">
-                                      ${isLibre ? 'DÍA LIBRE' : `${turno.inicio} - ${turno.fin}`}
+                                      ${isLibre ? 'DÍA LIBRE' : `${turno.inicio} - ${turno.fin}${clasificacion}`}
                                   </div></td>`;
                 } else {
                     // Botón para crear nuevo turno
@@ -770,6 +786,7 @@
         document.getElementById('rrhhHoraInicio').value = '';
         document.getElementById('rrhhHoraFin').value = '';
         document.getElementById('rrhhTipoTurno').value = 'Normal'; // Set default
+        document.getElementById('rrhhClasificacionTurno').value = 'am'; // Set default
         document.getElementById('turnos-row').style.display = 'flex'; // Show times
         document.querySelector('#formAgregarTurnoRRHH h3').innerText = 'Agregar Turno';
         toggleForm('formAgregarTurnoRRHH');
@@ -795,6 +812,7 @@
             document.getElementById('turnos-row').style.display = 'flex';
             document.getElementById('rrhhHoraInicio').value = turno.inicio;
             document.getElementById('rrhhHoraFin').value = turno.fin;
+            document.getElementById('rrhhClasificacionTurno').value = turno.clasificacion || 'am'; // Load classification
         }
         
         document.querySelector('#formAgregarTurnoRRHH h3').innerText = 'Editar Turno';
@@ -807,6 +825,7 @@
         const [empleado, cargo] = document.getElementById('rrhhEmpleadoTurno').value.split('|');
         const fecha = document.getElementById('rrhhDiaTurno').value;
         const tipoTurno = document.getElementById('rrhhTipoTurno').value;
+        const clasificacionTurno = document.getElementById('rrhhClasificacionTurno').value;
 
         let inicio = document.getElementById('rrhhHoraInicio').value;
         let fin = document.getElementById('rrhhHoraFin').value;
@@ -839,6 +858,7 @@
                 planillaPublicada[existingIndex].fin = fin;
                 planillaPublicada[existingIndex].empleado = empleado;
                 planillaPublicada[existingIndex].cargo = ROLES[cargo];
+                planillaPublicada[existingIndex].clasificacion = clasificacionTurno; // Save classification
                 alert('Turno actualizado con éxito (simulado)');
             }
         } else {
@@ -850,7 +870,8 @@
                 inicio,
                 fin,
                 cargo: ROLES[cargo],
-                posicion: null // Posición pendiente de Gerente
+                posicion: null, // Posición pendiente de Gerente
+                clasificacion: clasificacionTurno // Save classification
             };
             planillaPublicada.push(nuevoTurno);
             alert('Nuevo turno agregado con éxito (simulado)');
@@ -866,40 +887,67 @@
     
     // Carga demo de planilla para que Gerente y Crew tengan datos
     function seedDemo(){
+        const now = new Date();
+        const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
+        const eightDaysAgo = new Date(now); eightDaysAgo.setDate(now.getDate() - 8); // Outside 7-day deadline
+
         // Reset de Planilla para IDs consistentes en el demo
         planillaPublicada = [
             // Crew Constanza (Operativo)
-            { id: 101, empleado:'Crew Constanza', fecha:'2025-10-28', inicio:'08:00', fin:'13:00', cargo:'Crew', posicion:'Caja'},
-            { id: 102, empleado:'Crew Constanza', fecha:'2025-10-29', inicio:'15:00', fin:'20:00', cargo:'Crew', posicion:'Cocina'},
+            { id: 101, empleado:'Crew Constanza', fecha:'2025-10-28', inicio:'08:00', fin:'13:00', cargo:'Crew', posicion:'Caja', clasificacion: 'am'},
+            { id: 102, empleado:'Crew Constanza', fecha:'2025-10-29', inicio:'15:00', fin:'20:00', cargo:'Crew', posicion:'Cocina', clasificacion: 'pm'},
             // Crew Felipe (Operativo)
-            { id: 103, empleado:'Crew Felipe', fecha:'2025-10-28', inicio:'10:00', fin:'18:00', cargo:'Crew', posicion:'Cocina'},
-            { id: 104, empleado:'Crew Felipe', fecha:'2025-10-31', inicio:'07:00', fin:'14:00', cargo:'Crew', posicion:null}, // Sin posicion para demostrar asignación
+            { id: 103, empleado:'Crew Felipe', fecha:'2025-10-28', inicio:'10:00', fin:'18:00', cargo:'Crew', posicion:'Cocina', clasificacion: 'pm'},
+            { id: 104, empleado:'Crew Felipe', fecha:'2025-10-31', inicio:'07:00', fin:'14:00', cargo:'Crew', posicion:null, clasificacion: 'am'}, // Sin posicion para demostrar asignación
             // Entrenador Juan (Operativo)
-            { id: 105, empleado:'Entrenador Juan', fecha:'2025-10-28', inicio:'09:00', fin:'17:00', cargo:'Entrenador', posicion:'Sala'},
-            { id: 106, empleado:'Entrenador Juan', fecha:'2025-10-30', inicio:'10:00', fin:'18:00', cargo:'Entrenador', posicion:'Automac'},
+            { id: 105, empleado:'Entrenador Juan', fecha:'2025-10-28', inicio:'09:00', fin:'17:00', cargo:'Entrenador', posicion:'Sala', clasificacion: 'am'},
+            { id: 106, empleado:'Entrenador Juan', fecha:'2025-10-30', inicio:'10:00', fin:'18:00', cargo:'Entrenador', posicion:'Automac', clasificacion: 'pm'},
             // Gerente Jefe (NO Operativo - No debe contar en Home Planilla Info)
-            { id: 107, empleado:'Gerente Jefe', fecha:'2025-10-28', inicio:'07:00', fin:'15:00', cargo:'Gerente', posicion:'Oficina'},
+            { id: 107, empleado:'Gerente Jefe', fecha:'2025-10-28', inicio:'07:00', fin:'15:00', cargo:'Gerente', posicion:'Oficina', clasificacion: 'am'},
         ];
         
-        // Reset de Solicitudes - Agregando motivoRechazo
+        // Reset de Solicitudes - Agregando motivoRechazo y fechaRespuesta
         solicitudes = [
-            // Solicitud de Turno (Crew -> Gerente)
-            { id: 1, tipo: 'Turno', empleado: 'Crew Constanza', turnoOriginalId: 102, turnoOriginal: '2025-10-29 15:00-20:00', turnoPedido: '2025-10-29 08:00-13:00', motivo: 'Cita médica', estado: 'Pendiente', fechaSolicitud: new Date().toLocaleString(), motivoRechazo: null },
-            // Solicitud de Posición (Entrenador -> Gerente)
-            { id: 2, tipo: 'PosicionEntrenador', empleado: 'Entrenador Juan', turnoOriginalId: 105, turnoOriginal: '2025-10-28 09:00-17:00', posicionOriginal: 'Sala', posicionPedida: 'Cocina', motivo: 'Necesito práctica en Cocina', estado: 'Pendiente', fechaSolicitud: new Date().toLocaleString(), motivoRechazo: null },
-            // Solicitud de Posición (Crew -> Entrenador) - (Funcionalidad eliminada, pero la dejamos para demostrar visibilidad del rechazo en el historial de Crew)
-            { id: 3, tipo: 'PosicionCrew', empleado: 'Crew Constanza', turnoOriginalId: 101, turnoOriginal: '2025-10-28 08:00-13:00', posicionOriginal: 'Caja', posicionPedida: 'Automac', motivo: 'Más cómodo en Automac', estado: 'Rechazado', fechaSolicitud: new Date().toLocaleString(), motivoRechazo: 'No hay personal disponible en Caja para cubrir su puesto en ese horario.' },
+            // Solicitud de Turno (Crew -> Gerente) - PENDIENTE
+            { id: 1, tipo: 'Turno', empleado: 'Crew Constanza', turnoOriginalId: 102, turnoOriginal: '2025-10-29 15:00-20:00', turnoPedido: '2025-10-29 08:00-13:00', motivo: 'Cita médica', estado: 'Pendiente', fechaSolicitud: yesterday.toISOString(), motivoRechazo: null, fechaRespuesta: null },
+            // Solicitud de Posición (Entrenador -> Gerente) - RECHAZADA FUERA DE PLAZO (simulación)
+            { id: 2, tipo: 'PosicionEntrenador', empleado: 'Entrenador Juan', turnoOriginalId: 105, turnoOriginal: '2025-10-28 09:00-17:00', posicionOriginal: 'Sala', posicionPedida: 'Cocina', motivo: 'Necesito práctica en Cocina', estado: 'Rechazado', fechaSolicitud: eightDaysAgo.toISOString(), motivoRechazo: 'No se aprobó por falta de cobertura en Sala.', fechaRespuesta: now.toISOString() },
+            // Solicitud de Posición (Crew -> Entrenador) - APROBADA DENTRO DE PLAZO (para Crew status)
+            { id: 3, tipo: 'PosicionCrew', empleado: 'Crew Constanza', turnoOriginalId: 101, turnoOriginal: '2025-10-28 08:00-13:00', posicionOriginal: 'Caja', posicionPedida: 'Automac', motivo: 'Más cómodo en Automac', estado: 'Aprobado', fechaSolicitud: yesterday.toISOString(), motivoRechazo: null, fechaRespuesta: yesterday.toISOString() },
         ];
         
-        alert(`Demo cargado: ${planillaPublicada.length} turnos totales, 6 operativos y 2 solicitudes pendientes.`);
+        alert(`Demo cargado: ${planillaPublicada.length} turnos totales, 6 operativos y 1 solicitud pendiente.`);
         updateHomeDashboard(); // Actualiza contadores del Home
     }
     
+    // NEW: Utility function to check deadline status
+    function checkDeadlineStatus(fechaSolicitudStr, fechaRespuestaStr) {
+        if (!fechaRespuestaStr) return 'Pendiente';
+
+        const solicitada = new Date(fechaSolicitudStr);
+        const respondida = new Date(fechaRespuestaStr);
+        const deadline = new Date(solicitada);
+        deadline.setDate(solicitada.getDate() + 7); // 7 days deadline
+
+        if (respondida <= deadline) {
+            return 'dentro del plazo';
+        } else {
+            return 'fuera del plazo';
+        }
+    }
+
     // Renderiza planilla completa (Gerente/Entrenador/RRHH)
     function renderMallaPublicada(){
         const tbody = document.querySelector('#tableMallaVisualizacion tbody');
         if (!tbody) return;
         tbody.innerHTML = '';
+
+        const headerHtml = `
+            <div style="background: #f0f0f0; padding: 10px; border-radius: 8px; margin-bottom: 15px;">
+                <strong>Semana:</strong> ${mallaMetadata.startDate} - ${mallaMetadata.endDate}<br>
+                <span class="muted">Publicada: ${mallaMetadata.publicationDate}</span>
+            </div>`;
+        document.getElementById('mallaVisualizacionHeader').innerHTML = headerHtml;
         
         const filtro = document.getElementById('filtroMallaVisualizacion').value.toLowerCase();
         
@@ -909,7 +957,7 @@
             t.fecha.includes(filtro)
         ).forEach(t=>{
             const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${t.empleado}</td><td>${t.fecha}</td><td>${t.inicio}</td><td>${t.fin}</td><td>${t.cargo}</td><td>${t.posicion || 'SIN POSICIÓN'}</td>`;
+            tr.innerHTML = `<td>${t.empleado}</td><td>${t.fecha}</td><td>${t.inicio}</td><td>${t.fin}</td><td>${t.clasificacion.toUpperCase()}</td><td>${t.cargo}</td><td>${t.posicion || 'SIN POSICIÓN'}</td>`;
             tbody.appendChild(tr);
         });
     }
@@ -931,7 +979,7 @@
         )).forEach(t=>{
             const tr = document.createElement('tr');
             const posicionDisplay = t.posicion || 'PENDIENTE';
-            tr.innerHTML = `<td>${t.empleado}</td><td>${t.fecha}</td><td>${t.inicio} - ${t.fin}</td><td>**${posicionDisplay}**</td><td class='actions'>
+            tr.innerHTML = `<td>${t.empleado}</td><td>${t.fecha}</td><td>${t.inicio} - ${t.fin}</td><td>${t.clasificacion.toUpperCase()}</td><td>**${posicionDisplay}**</td><td class='actions'>
                 <button class='btn btn-sec' onclick='asignarPosicion(${t.id}, "${t.empleado}", "${t.fecha}")'>Asignar/Editar Posición</button>
                 <button class='btn' onclick='eliminarPosicion(${t.id})'>Eliminar</button>
             </td>`;
@@ -987,6 +1035,13 @@
       tbody.innerHTML = '';
       if(!currentUser) return;
       
+      const headerHtml = `
+            <div style="background: #f0f0f0; padding: 10px; border-radius: 8px; margin-bottom: 15px;">
+                <strong>Semana:</strong> ${mallaMetadata.startDate} - ${mallaMetadata.endDate}<br>
+                <span class="muted">Publicada: ${mallaMetadata.publicationDate}</span>
+            </div>`;
+        document.getElementById('miPlanillaHeader').innerHTML = headerHtml;
+      
       const filtro = document.getElementById('filtroMiPlanilla').value.toLowerCase();
         
       const mis = planillaPublicada.filter(t => t.empleado.toLowerCase() === currentUser.name.toLowerCase() && t.fecha.includes(filtro));
@@ -994,7 +1049,7 @@
       mis.forEach(t=>{
         const tr = document.createElement('tr');
         // Se eliminó la columna "Acción"
-        tr.innerHTML = `<td>${t.fecha}</td><td>${t.inicio}</td><td>${t.fin}</td><td>**${t.posicion || 'N/A'}**</td>`;
+        tr.innerHTML = `<td>${t.fecha}</td><td>${t.inicio}</td><td>${t.fin}</td><td>${t.clasificacion.toUpperCase()}</td><td>**${t.posicion || 'N/A'}**</td>`;
         tbody.appendChild(tr);
       })
     }
@@ -1012,7 +1067,7 @@
 
         // Rellenar la información del turno a cambiar
         document.getElementById('turnoIdACambiar').value = turnoId;
-        document.getElementById('turnoOriginalInfo').innerText = `${turno.fecha} ${turno.inicio}-${turno.fin} (Posición: ${turno.posicion || 'N/A'})`;
+        document.getElementById('turnoOriginalInfo').innerText = `${turno.fecha} ${turno.inicio}-${turno.fin} (${turno.clasificacion.toUpperCase()}, Posición: ${turno.posicion || 'N/A'})`;
     }
 
 
@@ -1038,7 +1093,7 @@
         
         mis.forEach((t,i)=>{
             const opt = document.createElement('option');
-            opt.value = t.id; opt.text = `${t.fecha} - ${t.inicio} a ${t.fin} (${t.posicion || 'SIN POSICIÓN'})`;
+            opt.value = t.id; opt.text = `${t.fecha} - ${t.inicio} a ${t.fin} (${t.clasificacion.toUpperCase()}, Posición: ${t.posicion || 'SIN POSICIÓN'})`;
             sel.appendChild(opt);
         });
         document.getElementById('turnoOriginalInfo').innerText = 'N/A';
@@ -1086,12 +1141,13 @@
             empleado: currentUser.name, 
             tipo: 'Turno', 
             estado: 'Pendiente', 
-            fechaSolicitud: new Date().toLocaleString(), 
+            fechaSolicitud: new Date().toISOString(), // NEW: Save as ISO string
             turnoOriginalId: turnoOriginal.id,
             turnoOriginal: `${turnoOriginal.fecha} ${turnoOriginal.inicio}-${turnoOriginal.fin}`,
             turnoPedido: `${sugFecha} ${sugInicio}-${sugFin}`,
             motivo: motivo,
-            motivoRechazo: null
+            motivoRechazo: null,
+            fechaRespuesta: null
         };
         
         solicitudes.push(solicitud);
@@ -1125,14 +1181,15 @@
             empleado: currentUser.name, 
             tipo: 'PosicionEntrenador', // Tipo para que lo revise el Gerente
             estado: 'Pendiente', 
-            fechaSolicitud: new Date().toLocaleString(), 
+            fechaSolicitud: new Date().toISOString(), // NEW: Save as ISO string
             turnoOriginalId: turnoOriginal.id,
             turnoOriginal: `${turnoOriginal.fecha} ${turnoOriginal.inicio}-${turnoOriginal.fin}`,
             posicionOriginal: turnoOriginal.posicion,
             posicionPedida,
             motivo,
             empleadoAfectado: turnoOriginal.empleado, // Nuevo campo para saber quién es el dueño del turno
-            motivoRechazo: null
+            motivoRechazo: null,
+            fechaRespuesta: null
         };
 
         solicitudes.push(solicitud);
@@ -1159,28 +1216,41 @@
       filteredSolicitudes.forEach(s=>{
         const tr = document.createElement('tr');
         
+        const fechaSolicitud = new Date(s.fechaSolicitud).toLocaleDateString('es-CL'); // NEW: Formatted date
+        
+        // NEW: Estado con plazo
+        let estadoDisplay = s.estado;
+        if (s.estado !== 'Pendiente') {
+            const status = checkDeadlineStatus(s.fechaSolicitud, s.fechaRespuesta);
+            estadoDisplay = `${s.estado} (${status})`;
+        }
+        
         let empleadoCol = s.empleado;
         let detalles;
         
         if (tipo === 'Turno') {
-          detalles = `<td>${s.turnoOriginal}</td><td>${s.turnoPedido}</td><td>${s.motivo}</td>`;
+          // Add Fecha de Solicitud to table
+          detalles = `<td>${empleadoCol}</td><td>${fechaSolicitud}</td><td>${s.turnoOriginal}</td><td>${s.turnoPedido}</td><td>${s.motivo}</td>`;
+          // Update table header in HTML done manually
         } else { // PosicionEntrenador
-          // Si es Entrenador pidiendo por otro, mostrar quién es el afectado
+          // Add Fecha de Solicitud to table
           if (s.empleado !== s.empleadoAfectado) {
              empleadoCol = `${s.empleado} (Para: ${s.empleadoAfectado})`;
           }
-          detalles = `<td>${s.turnoOriginal}</td><td>${s.posicionOriginal || 'N/A'}</td><td>${s.posicionPedida}</td><td>${s.motivo}</td>`;
+          detalles = `<td>${empleadoCol}</td><td>${fechaSolicitud}</td><td>${s.turnoOriginal}</td><td>${s.posicionOriginal || 'N/A'}</td><td>${s.posicionPedida}</td><td>${s.motivo}</td>`;
+          // Update table header in HTML done manually
         }
         
         // Columna de Estado/Acciones
-        const estadoHTML = `<span class="estado-${s.estado.toLowerCase()}">${s.estado}</span>`;
+        const estadoHTML = `<span class="estado-${s.estado.toLowerCase()}">${estadoDisplay}</span>`;
         let accionesHTML = s.estado === 'Pendiente' ? 
             `<button class='btn btn-approve' onclick='aprobarSolicitud(${s.id}, "${tipo}")'>Aprobar</button>
             <button class='btn btn-reject' onclick='rechazarSolicitud(${s.id}, "${tipo}")'>Rechazar</button>` 
             : s.estado;
 
-        // Columna de Empleado
-        tr.innerHTML = `<td>${empleadoCol}</td>${detalles}<td>${estadoHTML}</td><td class='actions'>${accionesHTML}</td>`;
+        // The structure of the row needs to be adjusted based on the new table headers
+        // Since both tables start with Empleado and Fecha Solicitud, we can use the 'detalles'
+        tr.innerHTML = `${detalles}<td>${estadoHTML}</td><td class='actions'>${accionesHTML}</td>`;
         tbody.appendChild(tr);
       })
     }
@@ -1192,6 +1262,7 @@
       if(!confirm(`¿Aprobar solicitud de ${tipo}? (Simulado - NOTA: La planilla no se actualiza en este mockup)`)) return;
       
       s.estado = 'Aprobado';
+      s.fechaRespuesta = new Date().toISOString(); // NEW: Record response date
       s.motivoRechazo = null; // Limpiar motivo de rechazo si es aprobado
       renderSolicitudes(tipo);
       updateHomeDashboard(); // Actualizar el dashboard si estamos en home
@@ -1212,6 +1283,7 @@
       
       s.estado = 'Rechazado';
       s.motivoRechazo = motivoRechazo.trim();
+      s.fechaRespuesta = new Date().toISOString(); // NEW: Record response date
       
       renderSolicitudes(tipo);
       updateHomeDashboard(); // Actualizar el dashboard si estamos en home
@@ -1229,13 +1301,20 @@
         mine.forEach(s=>{
             let detalle = `<td>${s.turnoOriginal}</td><td>Turno: ${s.turnoPedido}</td>`;
             
+            // NEW: Estado con plazo
+            let estadoDisplay = s.estado;
+            if (s.estado !== 'Pendiente') {
+                const status = checkDeadlineStatus(s.fechaSolicitud, s.fechaRespuesta);
+                estadoDisplay = `${s.estado} (${status})`;
+            }
+
             let comentarioRechazo = '';
             if (s.estado === 'Rechazado' && s.motivoRechazo) {
                 comentarioRechazo = `<div class="muted" style="margin-top:5px; color:var(--mc-red); font-weight: 600;">Motivo de Rechazo: ${s.motivoRechazo}</div>`;
             }
             
             const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${s.tipo.replace('Posicion', 'Pos.')}</td>${detalle}<td><span class="estado-${s.estado.toLowerCase()}">${s.estado}</span>${comentarioRechazo}</td>`;
+            tr.innerHTML = `<td>${s.tipo.replace('Posicion', 'Pos.')}</td>${detalle}<td><span class="estado-${s.estado.toLowerCase()}">${estadoDisplay}</span>${comentarioRechazo}</td>`;
             tbody.appendChild(tr);
         });
     }
@@ -1253,7 +1332,7 @@
 
         misTurnosHist.forEach(t=>{
             const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${t.fecha}</td><td>${t.inicio}</td><td>${t.fin}</td><td>**${t.posicion || 'N/A'}**</td>`;
+            tr.innerHTML = `<td>${t.fecha}</td><td>${t.inicio}</td><td>${t.fin}</td><td>${t.clasificacion.toUpperCase()}</td><td>**${t.posicion || 'N/A'}**</td>`;
             tbody.appendChild(tr);
         });
     }
@@ -1272,9 +1351,16 @@
             if (s.estado === 'Rechazado' && s.motivoRechazo) {
                 comentarioRechazo = `<div class="muted" style="margin-top:5px; color:var(--mc-red); font-weight: 600;">Motivo de Rechazo: ${s.motivoRechazo}</div>`;
             }
+
+            // NEW: Estado con plazo
+            let estadoDisplay = s.estado;
+            if (s.estado !== 'Pendiente') {
+                const status = checkDeadlineStatus(s.fechaSolicitud, s.fechaRespuesta);
+                estadoDisplay = `${s.estado} (${status})`;
+            }
             
             const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${s.fechaSolicitud}</td><td>${s.turnoOriginal}</td><td>${s.posicionPedida}</td><td><span class="estado-${s.estado.toLowerCase()}">${s.estado}</span>${comentarioRechazo}</td>`;
+            tr.innerHTML = `<td>${new Date(s.fechaSolicitud).toLocaleDateString('es-CL')}</td><td>${s.turnoOriginal}</td><td>${s.posicionPedida}</td><td><span class="estado-${s.estado.toLowerCase()}">${estadoDisplay}</span>${comentarioRechazo}</td>`;
             tbody.appendChild(tr);
         });
     }
