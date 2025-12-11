@@ -155,14 +155,6 @@
     .turno-box.pendiente { border: 2px dashed #f0ad4e; } /* Para turnos nuevos o editados */
     .turno-libre { background: #aaa; color: #fff; padding: 5px; border-radius: 5px; font-size: 12px; text-align: center; margin-bottom: 5px; }
 
-    /* Estilos para KPIs */
-    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-top: 20px; }
-    .kpi-card { padding: 15px; border-radius: 12px; background: var(--mc-light); border: 1px solid #ddd; }
-    .kpi-value { font-size: 32px; font-weight: bold; margin: 5px 0; }
-    .kpi-status { padding: 5px 10px; border-radius: 8px; font-weight: bold; display: inline-block; margin-top: 10px; font-size: 14px; }
-    .kpi-status.expected { background: #f0ad4e; color: #333; }
-    .kpi-status.better { background: #4CAF50; color: white; }
-    .kpi-status.deficient { background: var(--mc-red); color: white; }
 
     /* Responsivo */
     @media(max-width:900px){
@@ -215,8 +207,8 @@
             
             <div id="menuEntrenador" style="display:none">
               <button class="btn btn-sec" onclick="nav('visualizarMalla')">Malla con Posiciones</button>
-              <button class="btn btn-sec" onclick="nav('misTurnosYCambioEntrenador')">Mis Turnos y Solicitud de Cambio</button>
               <button class="btn btn-sec" onclick="nav('solicitarCambioPosicionAll')">Solicitar Cambio de Posición (Todos)</button>
+              <button class="btn btn-sec" onclick="nav('misTurnosYCambioEntrenador')">Mis Turnos y Solicitud de Cambio</button>
               <button class="btn btn-sec" onclick="nav('historialPosicion')">Estado de Solicitudes (Mías)</button>
             </div>
             
@@ -321,12 +313,8 @@
           
           <section id="kpisRRHH" class="screen">
             <h2>Panel de Indicadores Clave (RR.HH.)</h2>
-            <p class="muted">Indicadores basados en la planificación de la semana: ${mallaMetadata.startDate} - ${mallaMetadata.endDate} (Publicada: ${mallaMetadata.publicationDate}).</p>
-            
-            <div id="kpisContainer" class="kpi-grid">
-                </div>
-
-          </section>
+            <p class="muted">Aquí se mostrarán los principales KPIs de planificación y dotación (Pendiente de implementación).</p>
+            </section>
           <section id="planificarRRHH" class="screen">
             <h2>Creación de Malla Horaria Semanal (Gerente)</h2>
             <p class="muted">Planifique los turnos por empleado. Usted (Gerente) puede añadir las posiciones después.</p>
@@ -656,9 +644,6 @@
       if(screenId==='miPlanilla') {
         renderMiPlanilla();
       }
-      // NEW KPI RENDER
-      if(screenId==='kpisRRHH') renderKpisRRHH();
-      
       if(screenId==='visualizarMalla') renderMallaPublicada();
       if(screenId==='planificarPosiciones') renderPlanifPosiciones();
       if(screenId==='revisarSolicitudesTurno') renderSolicitudes('Turno');
@@ -769,123 +754,6 @@
             renderTablaUsuarios();
         }
     }
-    
-    /* ---------- FUNCIONES RRHH (KPIs) ---------- */
-
-    function getKpiStatus(result, expected, isBetterHigher) {
-        if (result === null) return { status: 'Deficiente', className: 'deficient' };
-        
-        if (isBetterHigher) {
-            if (result > expected) return { status: 'Mejor de lo esperado', className: 'better' };
-            if (result === expected) return { status: 'Esperado', className: 'expected' };
-            return { status: 'Deficiente', className: 'deficient' };
-        } else { // Better is lower (or equal for threshold)
-            if (result < expected) return { status: 'Mejor de lo esperado', className: 'better' };
-            if (result === expected) return { status: 'Esperado', className: 'expected' };
-            return { status: 'Deficiente', className: 'deficient' };
-        }
-    }
-    
-    function renderKpisRRHH() {
-        const container = document.getElementById('kpisContainer');
-        if (!container) return;
-        container.innerHTML = '<h3>Cálculo de Indicadores...</h3>';
-
-        const operativos = allUsers.filter(u => u.role === 'crew' || u.role === 'entrenador');
-        const totalOperativos = operativos.length;
-        
-        // Filtrar solo turnos operativos y reales (no días libres)
-        const turnosOperativosReales = planillaPublicada.filter(t => 
-            (t.cargo === 'Crew' || t.cargo === 'Entrenador') && t.inicio !== 'Libre'
-        );
-        const totalTurnosPlanificados = turnosOperativosReales.length;
-        
-        // ------------------------- KPI 1: Tasa de carga personal -------------------------
-        const turnosPorClasificacion = turnosOperativosReales.reduce((acc, t) => {
-            acc[t.clasificacion] = (acc[t.clasificacion] || 0) + 1;
-            return acc;
-        }, {});
-
-        const kpi1 = [];
-        const clasificaciones = ['am', 'pm', 'nocturno'];
-        clasificaciones.forEach(c => {
-            const count = turnosPorClasificacion[c] || 0;
-            const tasa = totalOperativos > 0 ? (count / totalOperativos) * 100 : 0;
-            const expected = 8;
-            const status = getKpiStatus(tasa, expected, true); // Better is Higher ( > 8%)
-
-            kpi1.push(`
-                <div class="kpi-card">
-                    <h4>Tasa de Carga: ${c.toUpperCase()}</h4>
-                    <p class="muted">(${count} turnos diarios / ${totalOperativos} empleados operativos) * 100</p>
-                    <div class="kpi-value">${tasa.toFixed(2)}%</div>
-                    <div class="kpi-status ${status.className}">
-                        ${status.status} (Esperado: ${expected}%)
-                    </div>
-                </div>
-            `);
-        });
-
-        // ------------------------- KPI 2: Porcentaje modificaciones a turnos despues del plan semanal -------------------------
-        const pubDate = new Date(mallaMetadata.publicationDate);
-        
-        // Contar modificaciones aprobadas/rechazadas que son de turno
-        const solicitudesTurnoResueltas = solicitudes.filter(s => 
-            s.tipo === 'Turno' && s.estado !== 'Pendiente'
-        );
-        
-        // Filtramos por las que se respondieron *después* de la publicación de la malla (simula la fecha del "plan semanal")
-        const modificacionesDespuesPlan = solicitudesTurnoResueltas.filter(s => {
-            const fechaRespuesta = new Date(s.fechaRespuesta);
-            return fechaRespuesta > pubDate;
-        }).length;
-        
-        const porcentajeModificaciones = totalTurnosPlanificados > 0 ? 
-                                         (modificacionesDespuesPlan / totalTurnosPlanificados) * 100 : 0;
-        const expectedKpi2 = 10;
-        // La lógica del usuario es confusa: "el resultado esperado es igual a 10%, mejor de lo esperado mayor a 10 % y deficiente menos a 10%."
-        // Esto implicaría que más modificaciones es *mejor*. Mantendremos la lógica literal, pero se podría cuestionar si el KPI debería ser inverso.
-        const statusKpi2 = getKpiStatus(porcentajeModificaciones, expectedKpi2, true);
-
-        const kpi2 = `
-            <div class="kpi-card">
-                <h4>% Modificaciones Post-Plan</h4>
-                <p class="muted">(${modificacionesDespuesPlan} turnos modificados / ${totalTurnosPlanificados} turnos planificados) * 100</p>
-                <div class="kpi-value">${porcentajeModificaciones.toFixed(2)}%</div>
-                <div class="kpi-status ${statusKpi2.className}">
-                    ${statusKpi2.status} (Esperado: ${expectedKpi2}%)
-                </div>
-            </div>
-        `;
-        
-        // ------------------------- KPI 3: Tasa de revisión oportuna de solicitudes -------------------------
-        const totalSolicitudesRecibidas = solicitudes.filter(s => s.tipo === 'Turno' || s.tipo === 'PosicionEntrenador').length;
-        
-        const revisadasDentroPlazo = solicitudes.filter(s => 
-            (s.tipo === 'Turno' || s.tipo === 'PosicionEntrenador') && 
-            s.estado !== 'Pendiente' && 
-            checkDeadlineStatus(s.fechaSolicitud, s.fechaRespuesta) === 'dentro del plazo'
-        ).length;
-        
-        const tasaRevision = totalSolicitudesRecibidas > 0 ? 
-                             (revisadasDentroPlazo / totalSolicitudesRecibidas) * 100 : 0;
-        const expectedKpi3 = 95;
-        const statusKpi3 = getKpiStatus(tasaRevision, expectedKpi3, true); // Better is Higher ( > 95%)
-
-        const kpi3 = `
-            <div class="kpi-card">
-                <h4>Tasa de Revisión Oportuna (Solicitudes)</h4>
-                <p class="muted">(${revisadasDentroPlazo} solicitudes revisadas a tiempo / ${totalSolicitudesRecibidas} solicitudes recibidas) * 100</p>
-                <div class="kpi-value">${tasaRevision.toFixed(2)}%</div>
-                <div class="kpi-status ${statusKpi3.className}">
-                    ${statusKpi3.status} (Esperado: ${expectedKpi3}%)
-                </div>
-            </div>
-        `;
-
-        container.innerHTML = kpi1.join('') + kpi2 + kpi3;
-    }
-
 
     /* ---------- FUNCIONES GERENTE (Creación de Malla) ---------- */
     
@@ -1170,7 +1038,7 @@
             tbody.appendChild(tr);
         });
     }
-
+    
     /* ---------- FUNCIONES ENTRENADOR (Mis Turnos y Solicitud) ---------- */
 
     function renderMiPlanillaEntrenador(){
@@ -1282,7 +1150,7 @@
         alert(`Solicitud de Turno enviada con éxito al Gerente (simulado)`);
         nav('misTurnosYCambioEntrenador'); 
     }
-    
+
     /* ---------- FUNCIONES GERENTE (Planif. Posiciones) ---------- */
     
     // Renderiza la planilla para la planificación de posiciones (Gerente)
