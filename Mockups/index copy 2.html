@@ -163,6 +163,10 @@
     .kpi-status.expected { background: #f0ad4e; color: #333; }
     .kpi-status.better { background: #4CAF50; color: white; }
     .kpi-status.deficient { background: var(--mc-red); color: white; }
+    .kpi-detail-table { width: 100%; margin-top: 10px; font-size: 12px; }
+    .kpi-detail-table td { padding: 2px 0; border-bottom: none; }
+    .kpi-section { margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid #eee; }
+
 
     /* Responsivo */
     @media(max-width:900px){
@@ -321,20 +325,31 @@
           
           <section id="kpisRRHH" class="screen">
             <h2>Panel de Indicadores Clave (RR.HH.)</h2>
-            <p class="muted">Indicadores basados en la planificación **Mensual** para el periodo: ${mallaMetadata.startDate} - ${mallaMetadata.endDate} (**Noviembre 2025**).</p>
+            <p class="muted">Reporte de desempeño **Noviembre 2025** (${mallaMetadata.startDate} - ${mallaMetadata.endDate}).</p>
             
-            <div style="margin-bottom: 20px;">
-                <label for="kpiTimeframe">Analizar por:</label>
-                <select id="kpiTimeframe" onchange="renderKpisRRHH()">
-                    <option value="month">Mensual (Total)</option>
-                    <option value="week">Semanal (Promedio)</option>
-                    <option value="day">Diario (Promedio)</option>
-                </select>
+            <div class="kpi-section">
+                <h3>KPI 1: Tasa de Carga Personal</h3>
+                <p class="muted">Mide la proporción de empleados operativos en turno (Promedio Diario). Objetivo: 8%.</p>
+                <div id="kpi1Container" class="kpi-grid">
+                    </div>
             </div>
 
-            <div id="kpisContainer" class="kpi-grid">
+            <div class="kpi-section">
+                <h3>KPI 2 y KPI 3: Estabilidad y Oportunidad</h3>
+                
+                <div style="margin-bottom: 20px;">
+                    <label for="kpiTimeframe">Periodo de Medición:</label>
+                    <select id="kpiTimeframe" onchange="renderKpisRRHH()">
+                        <option value="month">Mensual (Total)</option>
+                        <option value="week">Semanal (Promedio)</option>
+                        <option value="day">Diario (Promedio)</option>
+                    </select>
                 </div>
 
+                <div id="kpi2kpi3Container" class="kpi-grid">
+                    </div>
+            </div>
+            
           </section>
           <section id="planificarRRHH" class="screen">
             <h2>Creación de Malla Horaria Semanal (Gerente)</h2>
@@ -831,152 +846,146 @@
         }
     }
     
-    function renderKpisRRHH() {
-        const container = document.getElementById('kpisContainer');
-        if (!container) return;
+    // NEW UTILITY: Renders a KPI card including raw data table
+    function renderKpiCard(title, result, expected, isBetterHigher, rawData, unit = '%', denominatorDescription = '') {
+        const status = getKpiStatus(result, expected, isBetterHigher);
         
-        const timeframe = document.getElementById('kpiTimeframe')?.value || 'month';
+        let tableHtml = '';
+        if (rawData) {
+            tableHtml = `<table class="kpi-detail-table">`;
+            for (const key in rawData) {
+                tableHtml += `<tr><td><strong>${key}:</strong></td><td style="text-align:right">${rawData[key]}</td></tr>`;
+            }
+            tableHtml += `</table>`;
+        }
         
-        const operativos = allUsers.filter(u => u.role === 'crew' || u.role === 'entrenador');
-        const totalOperativos = operativos.length; // Total: 10
-        const totalDias = 28; // 4 semanas
+        return `
+            <div class="kpi-card">
+                <h4>${title}</h4>
+                <p class="muted">Objetivo: ${expected}${unit}</p>
+                <div class="kpi-value">${result.toFixed(2)}${unit}</div>
+                <div class="kpi-status ${status.className}">
+                    ${status.status}
+                </div>
+                ${tableHtml}
+            </div>
+        `;
+    }
 
-        // Filtrar solo turnos operativos y reales (no días libres)
+    
+    function renderKpisRRHH() {
+        // --- Setup and Data Filtering ---
+        const totalOperativos = allUsers.filter(u => u.role === 'crew' || u.role === 'entrenador').length; // Total: 10
+        const totalDias = 28; 
+        const pubDateISO = mallaMetadata.publicationDateISO; 
+        const timeframe = document.getElementById('kpiTimeframe')?.value || 'month';
+
         const turnosOperativosReales = planillaPublicada.filter(t => 
             (t.cargo === 'Crew' || t.cargo === 'Entrenador') && t.inicio !== 'Libre'
         );
         const totalTurnosPlanificados = turnosOperativosReales.length; // Total: 80
         
+        const totalSolicitudesRelevantes = solicitudes.filter(s => s.tipo === 'Turno' || s.tipo === 'PosicionEntrenador'); // Total: 15
+
         // --- CALCULATION HELPERS BASED ON TIMEFRAME ---
-        let baseDivisor = 1;
-        let divisorDescription = "total planificados";
+        let periodDivisor = 1;
+        let denominatorLabel = "total";
         
         if (timeframe === 'week') {
-            baseDivisor = 4; // 4 weeks in the month
-            divisorDescription = "promedio semanal";
+            periodDivisor = 4;
+            denominatorLabel = "promedio semanal";
         } else if (timeframe === 'day') {
-            baseDivisor = totalDias; // 28 days
-            divisorDescription = "promedio diario";
+            periodDivisor = totalDias; 
+            denominatorLabel = "promedio diario";
         }
         
-
-        // ------------------------- KPI 1: Tasa de carga personal -------------------------
+        // --- KPI 1: Tasa de carga personal (Fixed to Daily Average) ---
         const turnosPorClasificacion = turnosOperativosReales.reduce((acc, t) => {
             acc[t.clasificacion] = (acc[t.clasificacion] || 0) + 1;
             return acc;
         }, {});
         
         const kpi1 = [];
-        const clasificaciones = ['am', 'pm', 'nocturno'];
-        const expectedKpi1 = 8; // % de empleados por turno diario
+        const expectedKpi1 = 8;
         
-        clasificaciones.forEach(c => {
+        ['am', 'pm', 'nocturno'].forEach(c => {
             const countMensual = turnosPorClasificacion[c] || 0;
+            const countPromedioDiario = countMensual / totalDias; 
             
-            // Calculate rate: (Total Turnos / (Days or Weeks or 1) ) / Total Operativos * 100
-            let calculationUnit = countMensual;
-
-            if (timeframe === 'week') {
-                calculationUnit = countMensual / 4; // Average per week
-            } else if (timeframe === 'day') {
-                calculationUnit = countMensual / totalDias; // Average per day
-            }
+            const tasa = totalOperativos > 0 ? (countPromedioDiario / totalOperativos) * 100 : 0;
             
-            const tasa = totalOperativos > 0 ? (calculationUnit / totalOperativos) * 100 : 0;
-            const status = getKpiStatus(tasa, expectedKpi1, true);
-
-            kpi1.push(`
-                <div class="kpi-card">
-                    <h4>Tasa de Carga: ${c.toUpperCase()} (${timeframe === 'month' ? 'Mensual' : (timeframe === 'week' ? 'Semanal' : 'Diario')} Promedio)</h4>
-                    <p class="muted">(${countMensual.toFixed(0)} turnos totales / ${totalOperativos} empleados) ${timeframe === 'month' ? '' : 'por periodo'}</p>
-                    <div class="kpi-value">${tasa.toFixed(2)}%</div>
-                    <div class="kpi-status ${status.className}">
-                        ${status.status} (Esperado: ${expectedKpi1}%)
-                    </div>
-                </div>
-            `);
+            kpi1.push(renderKpiCard(
+                `Tasa de Carga: ${c.toUpperCase()}`,
+                tasa,
+                expectedKpi1,
+                true,
+                {
+                    'Turnos Mensuales': countMensual.toFixed(0),
+                    'Empleados Operativos': totalOperativos,
+                    'Turnos Prom. Diario': countPromedioDiario.toFixed(2)
+                }
+            ));
         });
+        
+        document.getElementById('kpi1Container').innerHTML = kpi1.join('');
 
-        // ------------------------- KPI 2: Porcentaje modificaciones a turnos despues del plan semanal -------------------------
-        const pubDate = new Date(mallaMetadata.publicationDateISO); // Fecha de publicación del plan semanal (ISO).
+
+        // --- KPI 2: Porcentaje modificaciones a turnos despues del plan semanal ---
+        const solicitudesTurnoAprobadas = solicitudes.filter(s => s.tipo === 'Turno' && s.estado === 'Aprobado');
         
-        // Solicitudes de Turno APROBADAS (Tipo Turno y estado Aprobado)
-        const solicitudesTurnoAprobadas = solicitudes.filter(s => 
-            s.tipo === 'Turno' && s.estado === 'Aprobado'
-        );
-        
-        // Contamos las que se aprobaron *después* de la publicación del plan semanal.
         const modificacionesPostPlanAprobadas = solicitudesTurnoAprobadas.filter(s => {
             const fechaRespuesta = new Date(s.fechaRespuesta);
-            return fechaRespuesta > pubDate; // FIXED: Use reliable ISO comparison
+            const pubDate = new Date(pubDateISO);
+            return fechaRespuesta > pubDate;
         }).length; // Expected: 8
         
-        // El cálculo ahora es simple: N° Aprobadas Post-Plan / Total de Turnos Planificados
-        let totalPlanificadosBase = totalTurnosPlanificados;
-        let modificacionCountBase = modificacionesPostPlanAprobadas;
-
-        // Apply division for Weekly/Daily View (using average)
-        if (timeframe === 'week') {
-            totalPlanificadosBase /= 4; 
-            modificacionCountBase /= 4; 
-        } else if (timeframe === 'day') {
-            totalPlanificadosBase /= totalDias; 
-            modificacionCountBase /= totalDias; 
-        }
+        const totalPlanificadosBase = totalTurnosPlanificados / periodDivisor;
+        const modificacionCountBase = modificacionesPostPlanAprobadas / periodDivisor; 
         
         const porcentajeModificaciones = totalPlanificadosBase > 0 ? 
                                          (modificacionCountBase / totalPlanificadosBase) * 100 : 0; // Expected: 10.00%
         const expectedKpi2 = 10;
         const statusKpi2 = getKpiStatus(porcentajeModificaciones, expectedKpi2, true);
-
-        const kpi2 = `
-            <div class="kpi-card">
-                <h4>% Modificaciones Post-Plan (${timeframe === 'month' ? 'Mensual' : (timeframe === 'week' ? 'Semanal' : 'Diario')})</h4>
-                <p class="muted">(${modificacionCountBase.toFixed(timeframe === 'month' ? 0 : 2)} turnos aprobados después del plan / ${totalPlanificadosBase.toFixed(timeframe === 'month' ? 0 : 2)} ${divisorDescription}) * 100</p>
-                <div class="kpi-value">${porcentajeModificaciones.toFixed(2)}%</div>
-                <div class="kpi-status ${statusKpi2.className}">
-                    ${statusKpi2.status} (Esperado: ${expectedKpi2}%)
-                </div>
-            </div>
-        `;
         
-        // ------------------------- KPI 3: Tasa de revisión oportuna de solicitudes (Mensual) -------------------------
-        const solicitudesRelevantes = solicitudes.filter(s => s.tipo === 'Turno' || s.tipo === 'PosicionEntrenador');
-        const totalSolicitudesRecibidas = solicitudesRelevantes.length; // Expected: 15
+        const kpi2Card = renderKpiCard(
+            `% Modificaciones Post-Plan`,
+            porcentajeModificaciones,
+            expectedKpi2,
+            true,
+            {
+                'Solicitudes Aprobadas Post-Plan': modificacionesPostPlanAprobadas.toFixed(0),
+                'Turnos Planificados (Base)': totalTurnosPlanificados.toFixed(0),
+                'Base de Cálculo': totalPlanificadosBase.toFixed(2) + ' ' + denominatorLabel
+            }
+        );
         
-        const revisadasDentroPlazo = solicitudesRelevantes.filter(s => 
+        // --- KPI 3: Tasa de revisión oportuna de solicitudes ---
+        const revisadasDentroPlazo = totalSolicitudesRelevantes.filter(s => 
             s.estado !== 'Pendiente' && 
             checkDeadlineStatus(s.fechaSolicitud, s.fechaRespuesta) === 'dentro del plazo'
         ).length; // Expected: 12
         
-        let totalSolicitudesBase = totalSolicitudesRecibidas;
-        let revisadasBase = revisadasDentroPlazo;
-
-        if (timeframe === 'week') {
-            totalSolicitudesBase /= 4;
-            revisadasBase /= 4;
-        } else if (timeframe === 'day') {
-            totalSolicitudesBase /= totalDias;
-            revisadasBase /= totalDias;
-        }
+        const totalSolicitudesBase = totalSolicitudesRelevantes.length / periodDivisor;
+        const revisadasBase = revisadasDentroPlazo / periodDivisor;
 
         const tasaRevision = totalSolicitudesBase > 0 ? 
                              (revisadasBase / totalSolicitudesBase) * 100 : 0; // Expected: 80.00%
         const expectedKpi3 = 95;
         const statusKpi3 = getKpiStatus(tasaRevision, expectedKpi3, true);
 
-        const kpi3 = `
-            <div class="kpi-card">
-                <h4>Tasa de Revisión Oportuna (Solicitudes)</h4>
-                <p class="muted">(${revisadasBase.toFixed(timeframe === 'month' ? 0 : 2)} solicitudes revisadas a tiempo / ${totalSolicitudesBase.toFixed(timeframe === 'month' ? 0 : 2)} ${divisorDescription}) * 100</p>
-                <div class="kpi-value">${tasaRevision.toFixed(2)}%</div>
-                <div class="kpi-status ${statusKpi3.className}">
-                    ${statusKpi3.status} (Esperado: ${expectedKpi3}%)
-                </div>
-            </div>
-        `;
+        const kpi3Card = renderKpiCard(
+            'Tasa de Revisión Oportuna (Solicitudes)',
+            tasaRevision,
+            expectedKpi3,
+            true,
+            {
+                'Solicitudes Resueltas a Tiempo': revisadasDentroPlazo.toFixed(0),
+                'Total Solicitudes Relevantes': totalSolicitudesRelevantes.length.toFixed(0),
+                'Base de Cálculo': totalSolicitudesBase.toFixed(2) + ' ' + denominatorLabel
+            }
+        );
 
-        container.innerHTML = kpi1.join('') + kpi2 + kpi3;
+        document.getElementById('kpi2kpi3Container').innerHTML = kpi2Card + kpi3Card;
     }
 
     /* ---------- FUNCIONES GERENTE (Creación de Malla) ---------- */
