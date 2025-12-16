@@ -428,7 +428,16 @@
 
           <section id="visualizarMalla" class="screen">
             <h2>Visualizar Malla Horaria (Turnos + Posiciones) (RR.HH. y Entrenador)</h2>
-            <div id="mallaVisualizacionHeader"></div> <p class="muted">Vista de la malla completa (turnos creados por Gerente y posiciones añadidas por el Gerente).</p>
+            <div class="row" style="margin-bottom: 15px;">
+                <div class="col">
+                    <label>Filtrar por Semana</label>
+                    <select id="filtroSemanaMalla" onchange="renderMallaPublicada()"></select>
+                </div>
+                <div class="col-auto">
+                    <div style="padding-top:20px"><p class="muted" id="mallaVisualizacionHeader"></p></div>
+                </div>
+            </div>
+            <p class="muted" style="margin-top:-10px">Vista de la malla completa (turnos creados por Gerente y posiciones añadidas por el Gerente).</p>
             <input type="text" id="filtroMallaVisualizacion" placeholder="Buscar por Empleado, Posición o Fecha..." style="width: 100%; margin-bottom: 10px;" onkeyup="renderMallaPublicada()">
             <table id="tableMallaVisualizacion">
                 <thead><tr><th>Empleado</th><th>Fecha</th><th>Inicio</th><th>Fin</th><th>Clasificación</th><th>Cargo</th><th>Posición</th></tr></thead>
@@ -515,7 +524,16 @@
           </section>
           <section id="misTurnosYCambioEntrenador" class="screen">
               <h2>Mi Horario y Solicitud de Cambio (Entrenador)</h2>
-              <div id="miPlanillaEntrenadorHeader"></div> <p class="muted">Tu horario personal asignado. Usa el formulario de abajo para solicitar un cambio de turno al Gerente.</p>
+              <div class="row" style="margin-bottom: 15px;">
+                <div class="col">
+                    <label>Filtrar por Semana</label>
+                    <select id="filtroSemanaEntrenador" onchange="renderMiPlanillaEntrenador()"></select>
+                </div>
+                <div class="col-auto">
+                    <div style="padding-top:20px"><p class="muted" id="miPlanillaEntrenadorHeader"></p></div>
+                </div>
+              </div>
+              <p class="muted" style="margin-top:-10px">Tu horario personal asignado. Usa el formulario de abajo para solicitar un cambio de turno al Gerente.</p>
               
               <input type="text" id="filtroMiPlanillaEntrenador" placeholder="Buscar por fecha (YYYY-MM-DD)..." style="width: 100%; margin-bottom: 10px;" onkeyup="renderMiPlanillaEntrenador()">
               <table id="tableMiPlanillaEntrenador"><thead><tr><th>Fecha</th><th>Inicio</th><th>Fin</th><th>Clasificación</th><th>Posición</th></tr></thead><tbody>
@@ -557,7 +575,16 @@
 
           <section id="miPlanilla" class="screen">
             <h2>Mi Horario y Posición Asignada (Crew)</h2>
-            <div id="miPlanillaHeader"></div> <p class="muted">Tu horario personal (turnos y posición asignada por el Gerente).</p>
+            <div class="row" style="margin-bottom: 15px;">
+                <div class="col">
+                    <label>Filtrar por Semana</label>
+                    <select id="filtroSemanaCrew" onchange="renderMiPlanilla()"></select>
+                </div>
+                <div class="col-auto">
+                    <div style="padding-top:20px"><p class="muted" id="miPlanillaHeader"></p></div>
+                </div>
+            </div>
+            <p class="muted" style="margin-top:-10px">Tu horario personal (turnos y posición asignada por el Gerente).</p>
             <input type="text" id="filtroMiPlanilla" placeholder="Buscar por fecha (YYYY-MM-DD)..." style="width: 100%; margin-bottom: 10px;" onkeyup="renderMiPlanilla()">
             <table id="tableMiPlanilla"><thead><tr><th>Fecha</th><th>Inicio</th><th>Fin</th><th>Clasificación</th><th>Posición</th></tr></thead><tbody>
                 </tbody></table>
@@ -661,6 +688,34 @@
             display: `${formatDate(start)} al ${formatDate(end)}`
         };
     }
+    
+    // NEW UTILITY: Generates a list of all distinct weeks within the mallaMetadata range.
+    function getAllWeeksInMalla() {
+        const start = new Date(mallaMetadata.startDate + 'T00:00:00');
+        const end = new Date(mallaMetadata.endDate + 'T00:00:00');
+        const weeks = [];
+        
+        let current = new Date(start);
+        // Advance current date to the start of its week (Monday)
+        current.setDate(current.getDate() - (current.getDay() + 6) % 7);
+        
+        let i = 1;
+        while (current <= end) {
+            const weekInfo = getWeekInfoByDate(current.toISOString().split('T')[0]);
+            
+            // Avoid adding weeks that start before the global malla start date, 
+            // unless the malla start date is a Monday (already handled by date setting)
+            if (weeks.length === 0 || weeks[weeks.length - 1].start !== weekInfo.start) {
+                weeks.push({
+                    id: `week${i++}`,
+                    ...weekInfo
+                });
+            }
+            // Move to the next Monday (start of the next week)
+            current.setDate(current.getDate() + 7);
+        }
+        return weeks;
+    }
 
 
     /* ---------- FUNCIONES HOME/DASHBOARD ---------- */
@@ -713,13 +768,20 @@
       if(screenId==='home') updateHomeDashboard();
       if(screenId==='gestionUsuarios') renderTablaUsuarios();
       if(screenId==='planificarRRHH') renderMallaRRHH(); // Función modificada
+      
       if(screenId==='miPlanilla') {
+        populateWeekFilters(); // NEW
         renderMiPlanilla();
       }
+      
       // NEW KPI RENDER
       if(screenId==='kpisRRHH') renderKpisRRHH();
       
-      if(screenId==='visualizarMalla') renderMallaPublicada();
+      if(screenId==='visualizarMalla') { // NEW
+          populateWeekFilters(); 
+          renderMallaPublicada();
+      }
+      
       if(screenId==='planificarPosiciones') renderPlanifPosiciones();
       if(screenId==='revisarSolicitudesTurno') renderSolicitudes('Turno');
       if(screenId==='revisarSolicitudesPosicion') renderSolicitudes('PosicionEntrenador'); // Gerente revisa Entrenador
@@ -730,6 +792,7 @@
       
       // NEW SECTION FOR TRAINER
       if(screenId==='misTurnosYCambioEntrenador') {
+        populateWeekFilters(); // NEW
         renderMiPlanillaEntrenador();
         populateMisTurnosTurnoSelectEntrenador(); 
       }
@@ -835,11 +898,11 @@
     function getKpiStatus(result, expected, isBetterHigher) {
         if (result === null || isNaN(result)) return { status: 'Deficiente', className: 'deficient' };
         
-        if (isBetterHigher) {
+        if (isBetterHigher) { // Mejor si es MAYOR
             if (result > expected) return { status: 'Mejor de lo esperado', className: 'better' };
             if (result === expected) return { status: 'Esperado', className: 'expected' };
             return { status: 'Deficiente', className: 'deficient' };
-        } else { // Better is lower (or equal for threshold)
+        } else { // Mejor si es MENOR (o igual al objetivo)
             if (result < expected) return { status: 'Mejor de lo esperado', className: 'better' };
             if (result === expected) return { status: 'Esperado', className: 'expected' };
             return { status: 'Deficiente', className: 'deficient' };
@@ -945,13 +1008,14 @@
         const porcentajeModificaciones = totalPlanificadosBase > 0 ? 
                                          (modificacionCountBase / totalPlanificadosBase) * 100 : 0; // Expected: 10.00%
         const expectedKpi2 = 10;
-        const statusKpi2 = getKpiStatus(porcentajeModificaciones, expectedKpi2, true);
+        // MODIFICACIÓN 1: isBetterHigher = false, ya que es mejor si el porcentaje es menor o igual al 10%
+        const statusKpi2 = getKpiStatus(porcentajeModificaciones, expectedKpi2, false); 
         
         const kpi2Card = renderKpiCard(
             `% Modificaciones Post-Plan`,
             porcentajeModificaciones,
             expectedKpi2,
-            true,
+            false, // MODIFICADO: Mejor si es MENOR
             {
                 'Solicitudes Aprobadas Post-Plan': modificacionesPostPlanAprobadas.toFixed(0),
                 'Turnos Planificados (Base)': totalTurnosPlanificados.toFixed(0),
@@ -1331,6 +1395,7 @@
         
         alert(`Demo cargado: ${allUsers.length} usuarios (10 operativos), ${planillaPublicada.length} turnos (80 operativos), y ${solicitudes.length} solicitudes (15 relevantes para KPIs).`);
         updateHomeDashboard(); // Actualiza contadores del Home
+        populateWeekFilters(); // NEW: Populate filters immediately after loading data
     }
     
     // NEW: Utility function to check deadline status
@@ -1348,6 +1413,22 @@
             return 'fuera del plazo';
         }
     }
+    
+    // New function to populate the week filter dropdowns
+    function populateWeekFilters() {
+        if(!document.getElementById('filtroSemanaMalla')) return; // Exit if elements are not rendered yet
+
+        const weeks = getAllWeeksInMalla();
+        const optionsHtml = weeks.map(w => `<option value="${w.start}|${w.end}">${w.display}</option>`).join('');
+
+        const defaultOption = '<option value="">(Mostrar rango completo)</option>';
+        
+        // Target the three select elements
+        document.getElementById('filtroSemanaMalla').innerHTML = defaultOption + optionsHtml;
+        document.getElementById('filtroSemanaCrew').innerHTML = defaultOption + optionsHtml;
+        document.getElementById('filtroSemanaEntrenador').innerHTML = defaultOption + optionsHtml;
+    }
+
 
     // Renderiza planilla completa (Gerente/Entrenador/RRHH)
     function renderMallaPublicada(){
@@ -1355,16 +1436,31 @@
         if (!tbody) return;
         tbody.innerHTML = '';
 
+        // NEW: Get selected week filter
+        const selectedWeekValue = document.getElementById('filtroSemanaMalla').value;
+        const [filterStart, filterEnd] = selectedWeekValue.split('|');
+        
+        let displayStart = mallaMetadata.startDate;
+        let displayEnd = mallaMetadata.endDate;
+        
+        let filteredData = planillaPublicada;
+
+        if (filterStart && filterEnd) {
+            displayStart = filterStart;
+            displayEnd = filterEnd;
+            // Filter logic: date is between filterStart and filterEnd (inclusive)
+            filteredData = planillaPublicada.filter(t => t.fecha >= filterStart && t.fecha <= filterEnd);
+        }
+        
         const headerHtml = `
-            <div style="background: #f0f0f0; padding: 10px; border-radius: 8px; margin-bottom: 15px;">
-                <strong>Semana:</strong> ${mallaMetadata.startDate} - ${mallaMetadata.endDate}<br>
-                <span class="muted">Publicada: ${mallaMetadata.publicationDate}</span>
-            </div>`;
+            <strong>Semana/Rango:</strong> ${displayStart} - ${displayEnd}<br>
+            <span class="muted">Publicada: ${mallaMetadata.publicationDate}</span>
+            `;
         document.getElementById('mallaVisualizacionHeader').innerHTML = headerHtml;
         
         const filtro = document.getElementById('filtroMallaVisualizacion').value.toLowerCase();
         
-        planillaPublicada.filter(t => 
+        filteredData.filter(t => 
             t.empleado.toLowerCase().includes(filtro) || 
             (t.posicion && t.posicion.toLowerCase().includes(filtro)) ||
             t.fecha.includes(filtro)
@@ -1448,16 +1544,31 @@
       tbody.innerHTML = '';
       if(!currentUser) return;
       
+      // NEW: Get selected week filter
+      const selectedWeekValue = document.getElementById('filtroSemanaCrew').value;
+      const [filterStart, filterEnd] = selectedWeekValue.split('|');
+        
+      let displayStart = mallaMetadata.startDate;
+      let displayEnd = mallaMetadata.endDate;
+      
+      let filteredData = planillaPublicada.filter(t => t.empleado.toLowerCase() === currentUser.name.toLowerCase());
+
+      if (filterStart && filterEnd) {
+          displayStart = filterStart;
+          displayEnd = filterEnd;
+          // Filter logic: date is between filterStart and filterEnd (inclusive) AND is current user
+          filteredData = filteredData.filter(t => t.fecha >= filterStart && t.fecha <= filterEnd);
+      }
+      
       const headerHtml = `
-            <div style="background: #f0f0f0; padding: 10px; border-radius: 8px; margin-bottom: 15px;">
-                <strong>Semana:</strong> ${mallaMetadata.startDate} - ${mallaMetadata.endDate}<br>
-                <span class="muted">Publicada: ${mallaMetadata.publicationDate}</span>
-            </div>`;
+            <strong>Semana/Rango:</strong> ${displayStart} - ${displayEnd}<br>
+            <span class="muted">Publicada: ${mallaMetadata.publicationDate}</span>
+            `;
         document.getElementById('miPlanillaHeader').innerHTML = headerHtml;
       
       const filtro = document.getElementById('filtroMiPlanilla').value.toLowerCase();
         
-      const mis = planillaPublicada.filter(t => t.empleado.toLowerCase() === currentUser.name.toLowerCase() && t.fecha.includes(filtro));
+      const mis = filteredData.filter(t => t.fecha.includes(filtro)); // Apply text filter to already filtered data
 
       mis.forEach(t=>{
         const tr = document.createElement('tr');
@@ -1794,22 +1905,36 @@
         tbody.innerHTML = '';
         if(!currentUser) return;
         
+        // NEW: Get selected week filter
+        const selectedWeekValue = document.getElementById('filtroSemanaEntrenador').value;
+        const [filterStart, filterEnd] = selectedWeekValue.split('|');
+        
+        let displayStart = mallaMetadata.startDate;
+        let displayEnd = mallaMetadata.endDate;
+        
+        let filteredData = planillaPublicada.filter(t => 
+            t.empleado.toLowerCase() === currentUser.name.toLowerCase() && 
+            t.cargo === 'Entrenador'
+        );
+
+        if (filterStart && filterEnd) {
+            displayStart = filterStart;
+            displayEnd = filterEnd;
+            // Filter logic: date is between filterStart and filterEnd (inclusive) AND is current user
+            filteredData = filteredData.filter(t => t.fecha >= filterStart && t.fecha <= filterEnd);
+        }
+        
         // Display metadata
         const headerHtml = `
-              <div style="background: #f0f0f0; padding: 10px; border-radius: 8px; margin-bottom: 15px;">
-                  <strong>Semana:</strong> ${mallaMetadata.startDate} - ${mallaMetadata.endDate}<br>
-                  <span class="muted">Publicada: ${mallaMetadata.publicationDate}</span>
-              </div>`;
+              <strong>Semana/Rango:</strong> ${displayStart} - ${displayEnd}<br>
+              <span class="muted">Publicada: ${mallaMetadata.publicationDate}</span>
+            `;
         document.getElementById('miPlanillaEntrenadorHeader').innerHTML = headerHtml;
         
         const filtro = document.getElementById('filtroMiPlanillaEntrenador').value.toLowerCase();
         
         // Filter for current user AND role 'Entrenador'
-        const mis = planillaPublicada.filter(t => 
-            t.empleado.toLowerCase() === currentUser.name.toLowerCase() && 
-            t.cargo === 'Entrenador' &&
-            t.fecha.includes(filtro)
-        );
+        const mis = filteredData.filter(t => t.fecha.includes(filtro)); // Apply text filter to already filtered data
 
         mis.forEach(t=>{
             const tr = document.createElement('tr');
@@ -1981,16 +2106,31 @@
       tbody.innerHTML = '';
       if(!currentUser) return;
       
+      // NEW: Get selected week filter
+      const selectedWeekValue = document.getElementById('filtroSemanaCrew').value;
+      const [filterStart, filterEnd] = selectedWeekValue.split('|');
+        
+      let displayStart = mallaMetadata.startDate;
+      let displayEnd = mallaMetadata.endDate;
+      
+      let filteredData = planillaPublicada.filter(t => t.empleado.toLowerCase() === currentUser.name.toLowerCase());
+
+      if (filterStart && filterEnd) {
+          displayStart = filterStart;
+          displayEnd = filterEnd;
+          // Filter logic: date is between filterStart and filterEnd (inclusive) AND is current user
+          filteredData = filteredData.filter(t => t.fecha >= filterStart && t.fecha <= filterEnd);
+      }
+      
       const headerHtml = `
-            <div style="background: #f0f0f0; padding: 10px; border-radius: 8px; margin-bottom: 15px;">
-                <strong>Semana:</strong> ${mallaMetadata.startDate} - ${mallaMetadata.endDate}<br>
-                <span class="muted">Publicada: ${mallaMetadata.publicationDate}</span>
-            </div>`;
+            <strong>Semana/Rango:</strong> ${displayStart} - ${displayEnd}<br>
+            <span class="muted">Publicada: ${mallaMetadata.publicationDate}</span>
+            `;
         document.getElementById('miPlanillaHeader').innerHTML = headerHtml;
       
       const filtro = document.getElementById('filtroMiPlanilla').value.toLowerCase();
         
-      const mis = planillaPublicada.filter(t => t.empleado.toLowerCase() === currentUser.name.toLowerCase() && t.fecha.includes(filtro));
+      const mis = filteredData.filter(t => t.fecha.includes(filtro));
 
       mis.forEach(t=>{
         const tr = document.createElement('tr');
